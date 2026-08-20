@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Regional Geo-Draft War // Campaign Table</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg1:#EAF4EE;
+    --bg2:#FBF7EC;
+    --card:#FFFFFF;
+    --card-alt:#F3F8F4;
+    --line:#E1EAE3;
+    --ink:#22322A;
+    --ink-soft:#657A6E;
+    --teal:#28977F;
+    --teal-dark:#1D7767;
+    --teal-tint:#E3F4EF;
+    --coral:#F0704B;
+    --coral-dark:#D85A38;
+    --coral-tint:#FDEBE4;
+    --gold:#F0B429;
+    --green:#3FA65A;
+    --incoming-bg:#FFF9EA;
+    --incoming-label:#A9791A;
+    --win-bg1:#E7F6EA;
+    --map-land:#CFE8DA;
+    --map-bg:#DCEFF3;
+    --shadow:0 6px 20px rgba(34,60,45,0.08);
+    --shadow-sm:0 2px 8px rgba(34,60,45,0.06);
+    --r-lg:20px;
+    --r-md:14px;
+    --r-sm:9px;
+  }
+  body.dark{
+    --bg1:#15201A;
+    --bg2:#1A241D;
+    --card:#1E2A22;
+    --card-alt:#243128;
+    --line:#33453A;
+    --ink:#E9F2EC;
+    --ink-soft:#9FB6A7;
+    --teal:#3FC1A0;
+    --teal-dark:#2CA184;
+    --teal-tint:#1C3A32;
+    --coral:#FF8A66;
+    --coral-dark:#F06A46;
+    --coral-tint:#3A241C;
+    --gold:#F3C34D;
+    --green:#57C476;
+    --incoming-bg:#2E2A14;
+    --incoming-label:#E0B84D;
+    --win-bg1:#1E3324;
+    --map-land:#2A3B31;
+    --map-bg:#182420;
+    --shadow:0 6px 20px rgba(0,0,0,0.3);
+    --shadow-sm:0 2px 8px rgba(0,0,0,0.25);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:linear-gradient(160deg, var(--bg1) 0%, var(--bg2) 100%);
+    color:var(--ink);
+    font-family:'Nunito',sans-serif;
+    min-height:100vh;
+    padding:28px 16px 80px;
+    transition:background .3s, color .3s;
+  }
+  .wrap{max-width:940px;margin:0 auto;}
+
+  /* ===== Header ===== */
+  .letterhead{
+    border:1px solid var(--line);
+    background:var(--card);
+    border-radius:var(--r-lg);
+    box-shadow:var(--shadow);
+    padding:24px 26px;
+    margin-bottom:20px;
+    transition:background .3s, border-color .3s;
+  }
+  .lh-top{display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap;}
+  .lh-eyebrow{
+    font-family:'Space Mono',monospace;
+    font-size:11px; letter-spacing:.14em; color:var(--teal-dark); text-transform:uppercase; font-weight:700;
+  }
+  .lh-title{
+    font-family:'Fredoka',sans-serif;
+    font-weight:700;
+    font-size:clamp(28px,5.5vw,42px);
+    color:var(--ink);
+    line-height:1.05;
+    margin:6px 0 4px;
+  }
+  .lh-sub{font-size:14.5px; color:var(--ink-soft); max-width:560px; line-height:1.5;}
+  .lh-right{display:flex; flex-direction:column; align-items:center; gap:8px;}
+  .seal{
+    width:60px; height:60px; border-radius:50%;
+    background:linear-gradient(150deg,var(--teal-tint),var(--card));
+    border:2px solid var(--teal);
+    display:flex; align-items:center; justify-content:center;
+    font-size:27px; flex-shrink:0;
+  }
+  .theme-toggle{
+    font-family:'Nunito',sans-serif; font-weight:700; font-size:11.5px;
+    border:1.5px solid var(--line); background:var(--card-alt); color:var(--ink-soft);
+    border-radius:999px; padding:5px 12px; cursor:pointer; display:flex; align-items:center; gap:5px;
+  }
+  .theme-toggle:hover{border-color:var(--teal); color:var(--teal-dark);}
+
+  .phase-track{
+    display:flex; gap:8px; margin-top:18px; flex-wrap:wrap;
+  }
+  .phase-chip{
+    font-family:'Nunito',sans-serif; font-weight:700;
+    padding:6px 14px; border-radius:999px; border:1px solid var(--line);
+    color:var(--ink-soft); font-size:12.5px; background:var(--card-alt);
+  }
+  .phase-chip.active{border-color:var(--teal); color:var(--teal-dark); background:var(--teal-tint);}
+  .phase-chip.done{border-color:var(--line); color:var(--teal); background:var(--card);}
+
+  .session-bar{
+    display:flex; gap:10px; margin-top:12px; flex-wrap:wrap; align-items:center;
+  }
+  .session-chip{
+    font-family:'Space Mono',monospace; font-size:11.5px; font-weight:700;
+    padding:6px 12px; border-radius:999px; background:var(--card-alt); border:1px solid var(--line); color:var(--ink-soft);
+  }
+  .switch-wrap{display:flex; align-items:center; gap:7px; font-size:12.5px; font-weight:700; color:var(--ink-soft);}
+  .switch{position:relative; width:38px; height:21px; flex-shrink:0;}
+  .switch input{opacity:0; width:0; height:0;}
+  .switch-slider{position:absolute; cursor:pointer; inset:0; background:var(--line); border-radius:999px; transition:.2s;}
+  .switch-slider::before{content:""; position:absolute; height:15px; width:15px; left:3px; top:3px; background:var(--card); border-radius:50%; transition:.2s; box-shadow:0 1px 3px rgba(0,0,0,0.25);}
+  .switch input:checked + .switch-slider{background:var(--teal);}
+  .switch input:checked + .switch-slider::before{transform:translateX(17px);}
+
+  /* ===== Panel ===== */
+  .panel{
+    border:1px solid var(--line);
+    background:var(--card);
+    border-radius:var(--r-lg);
+    box-shadow:var(--shadow);
+    padding:24px 26px;
+    margin-bottom:18px;
+    transition:background .3s, border-color .3s;
+  }
+  .panel h2{
+    font-family:'Fredoka',sans-serif;
+    font-weight:600;
+    font-size:23px;
+    margin:0 0 6px;
+    color:var(--ink);
+  }
+  .panel .desc{color:var(--ink-soft); font-size:14.5px; margin:0 0 18px; max-width:640px; line-height:1.55;}
+
+  .btn{
+    font-family:'Nunito',sans-serif;
+    font-weight:700; font-size:14px;
+    background:var(--card); color:var(--teal-dark);
+    border:2px solid var(--teal);
+    border-radius:999px;
+    padding:11px 22px; cursor:pointer;
+    transition:background .15s, color .15s, transform .1s;
+  }
+  .btn:hover{background:var(--teal-tint); transform:translateY(-1px);}
+  .btn:disabled{opacity:.4; cursor:not-allowed; transform:none;}
+  .btn.primary{background:var(--teal); color:#fff;}
+  .btn.primary:hover{background:var(--teal-dark);}
+  .btn.ghost{border-color:var(--line); color:var(--ink-soft); background:transparent;}
+  .btn.small{padding:7px 14px; font-size:12.5px;}
+
+  /* ===== Difficulty select ===== */
+  .diff-select{display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; margin-bottom:20px;}
+  .diff-opt{
+    border:2px solid var(--line); background:var(--card-alt); border-radius:var(--r-md);
+    padding:14px 16px; cursor:pointer; transition:border-color .15s, transform .1s;
+  }
+  .diff-opt:hover{transform:translateY(-2px);}
+  .diff-opt.active{border-color:var(--teal); background:var(--teal-tint);}
+  .diff-name{font-family:'Fredoka',sans-serif; font-weight:600; font-size:18px; color:var(--ink);}
+  .diff-desc{font-size:12.5px; color:var(--ink-soft); margin-top:4px; line-height:1.5;}
+
+  /* ===== Draft grid ===== */
+  .slots{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px; margin-bottom:20px;}
+  .slot{
+    border:1.5px solid var(--line);
+    background:var(--card-alt);
+    border-radius:var(--r-md);
+    padding:14px 14px 12px;
+    min-height:112px;
+    position:relative;
+    cursor:pointer;
+    transition:border-color .15s, transform .1s, box-shadow .15s;
+  }
+  .slot:hover:not(.locked):not(.disabled){border-color:var(--teal); transform:translateY(-2px); box-shadow:var(--shadow-sm);}
+  .slot.disabled{cursor:default; opacity:.5;}
+  .slot-label{
+    font-size:12.5px; font-weight:800; color:var(--ink);
+    display:flex; align-items:center; gap:6px;
+  }
+  .dot{width:9px; height:9px; border-radius:50%; display:inline-block; flex-shrink:0;}
+  .slot-open-msg{margin-top:22px; font-size:12px; color:var(--ink-soft); font-style:italic;}
+  .slot.locked{border-color:var(--teal); background:var(--card);}
+  .slot-country{
+    font-family:'Fredoka',sans-serif; font-weight:600; font-size:18px;
+    margin-top:8px; color:var(--ink);
+  }
+  .slot-value{font-family:'Space Mono',monospace; font-size:19px; color:var(--teal-dark); margin-top:2px; font-weight:700;}
+  .lockbadge{
+    position:absolute; top:10px; right:10px;
+    font-size:10px; font-weight:800; letter-spacing:.03em;
+    color:var(--teal-dark); background:var(--teal-tint); border-radius:999px;
+    padding:2px 8px;
+  }
+
+  .incoming{
+    border:2px dashed var(--gold);
+    border-radius:var(--r-md);
+    background:var(--incoming-bg);
+    padding:16px; margin-bottom:16px;
+  }
+  .incoming-top{display:flex; justify-content:space-between; align-items:flex-start; gap:10px; flex-wrap:wrap;}
+  .incoming-label{font-size:11px; font-weight:800; letter-spacing:.08em; color:var(--incoming-label); text-transform:uppercase;}
+  .incoming-name{font-family:'Fredoka',sans-serif; font-weight:700; font-size:26px; color:var(--ink); margin:2px 0 10px;}
+  .incoming-stats{display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:8px;}
+  .ichip{border-radius:var(--r-sm); padding:7px 10px; font-family:'Space Mono',monospace; font-size:11px; color:var(--ink);}
+  .ichip b{display:block; font-size:14px; margin-top:1px;}
+  .stats-hidden-msg{font-size:13px; color:var(--ink-soft); font-style:italic; padding:8px 0 2px;}
+
+  /* ===== Region reel ===== */
+  .reel-area{display:flex; flex-direction:column; align-items:center; gap:16px;}
+  .reel-outer{position:relative; width:min(360px,90vw);}
+  .reel-window{
+    position:relative; height:150px; overflow:hidden;
+    border:2px solid var(--line); border-radius:var(--r-md); background:var(--card-alt);
+  }
+  .reel-highlight{
+    position:absolute; top:50%; left:0; right:0; height:50px; transform:translateY(-50%);
+    border-top:2px solid var(--teal); border-bottom:2px solid var(--teal);
+    background:rgba(40,151,127,0.08); pointer-events:none; z-index:3;
+  }
+  .reel-list{position:absolute; left:0; right:0; top:0; transition:transform 3.1s cubic-bezier(.13,.7,.1,1);}
+  .reel-item{
+    height:50px; display:flex; align-items:center; justify-content:center;
+    font-family:'Fredoka',sans-serif; font-weight:600; font-size:19px; color:var(--ink-soft);
+  }
+  .reel-fade-top,.reel-fade-bot{
+    position:absolute; left:0; right:0; height:34px; z-index:4; pointer-events:none;
+  }
+  .reel-fade-top{top:0; background:linear-gradient(var(--card-alt), rgba(0,0,0,0));}
+  .reel-fade-bot{bottom:0; background:linear-gradient(rgba(0,0,0,0), var(--card-alt));}
+  .reel-result{
+    font-family:'Fredoka',sans-serif; font-weight:700; font-size:22px;
+    color:var(--teal-dark); text-align:center; min-height:30px;
+  }
+
+  /* ===== Battle log ===== */
+  .terminal{
+    background:var(--card-alt); border:1px solid var(--line); border-radius:var(--r-md);
+    font-family:'Space Mono',monospace; font-size:12.5px; line-height:1.7;
+    padding:16px; min-height:150px; white-space:pre-wrap; color:var(--ink-soft);
+  }
+  .terminal .line-teal{color:var(--teal-dark); font-weight:700;}
+  .terminal .line-coral{color:var(--coral-dark); font-weight:700;}
+  .cursor{display:inline-block; width:7px; height:13px; background:var(--ink-soft); vertical-align:-2px; animation:blink 1s steps(1) infinite;}
+  @keyframes blink{50%{opacity:0;}}
+
+  .rival-cards{display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; margin:16px 0;}
+  .rival-card{border:1.5px solid var(--coral); background:var(--coral-tint); border-radius:var(--r-md); padding:13px;}
+  .rival-name{font-family:'Fredoka',sans-serif; font-weight:600; font-size:17px; color:var(--ink);}
+  .rival-tag{font-size:10px; font-weight:800; color:var(--coral-dark); letter-spacing:.04em; text-transform:uppercase;}
+  .rival-stats{display:grid; grid-template-columns:1fr 1fr; gap:3px 10px; font-family:'Space Mono',monospace; font-size:10.5px; color:var(--ink-soft); margin-top:8px;}
+  .rival-stats div{display:flex; justify-content:space-between; gap:4px;}
+  .rival-stats b{color:var(--coral-dark);}
+
+  /* ===== Map ===== */
+  .map-section{margin-bottom:20px;}
+  .map-title{font-family:'Fredoka',sans-serif; font-weight:600; font-size:16px; margin-bottom:8px; text-align:center;}
+  .map-box{background:var(--map-bg); border:1px solid var(--line); border-radius:var(--r-md); padding:10px; overflow:hidden;}
+  .map-legend{display:flex; justify-content:center; gap:20px; font-size:12px; font-weight:700; color:var(--ink-soft); margin-top:8px;}
+  .map-legend span{display:flex; align-items:center; gap:6px;}
+
+  /* ===== Result ===== */
+  .result-banner{
+    text-align:center; padding:24px 16px; border-radius:var(--r-lg); margin-bottom:18px;
+  }
+  .result-banner.win{background:linear-gradient(150deg,var(--win-bg1),var(--card)); border:2px solid var(--green);}
+  .result-banner.loss{background:linear-gradient(150deg,var(--coral-tint),var(--card)); border:2px solid var(--coral);}
+  .result-title{font-family:'Fredoka',sans-serif; font-weight:700; font-size:clamp(30px,6.5vw,46px);}
+  .result-title.win{color:var(--green);}
+  .result-title.loss{color:var(--coral-dark);}
+  .result-margin{font-family:'Space Mono',monospace; font-size:12px; color:var(--ink-soft); margin-top:6px;}
+
+  .clash-block{margin-bottom:18px;}
+  .clash-legend{display:flex; justify-content:center; gap:20px; font-size:12.5px; font-weight:700; margin-bottom:12px;}
+  .clash-legend span{display:flex; align-items:center; gap:6px;}
+  .legend-dot{width:11px; height:11px; border-radius:50%; display:inline-block;}
+
+  .clash-row{margin-bottom:12px;}
+  .clash-row.big{margin-bottom:18px;}
+  .clash-toprow{display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;}
+  .clash-cat{font-size:12.5px; font-weight:800; color:var(--ink); display:flex; align-items:center; gap:6px;}
+  .clash-cat.big{font-family:'Fredoka',sans-serif; font-size:16px;}
+  .clash-winmark{font-size:11px; font-weight:800;}
+  .clash-winmark.you{color:var(--teal-dark);}
+  .clash-winmark.bloc{color:var(--coral-dark);}
+  .clash-track{display:flex; height:14px; border-radius:999px; overflow:hidden; background:var(--card-alt); border:1px solid var(--line);}
+  .clash-row.big .clash-track{height:22px;}
+  .clash-half{flex:1; position:relative; display:flex;}
+  .clash-half.you{justify-content:flex-end;}
+  .clash-half.bloc{justify-content:flex-start;}
+  .clash-fill{height:100%; width:0%; transition:width 0.9s cubic-bezier(.2,.8,.2,1);}
+  .clash-fill.you{background:linear-gradient(90deg,var(--teal),var(--teal-dark));}
+  .clash-fill.bloc{background:linear-gradient(90deg,var(--coral-dark),var(--coral));}
+  .clash-vals{display:flex; justify-content:space-between; font-family:'Space Mono',monospace; font-size:10.5px; color:var(--ink-soft); margin-top:3px;}
+
+  footer{text-align:center; font-family:'Space Mono',monospace; font-size:10px; color:var(--ink-soft); margin-top:26px; opacity:.7;}
+  .hidden{display:none !important;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="letterhead">
+    <div class="lh-top">
+      <div>
+        <div class="lh-eyebrow">A Geography Strategy Game</div>
+        <div class="lh-title">Regional Geo-Draft War</div>
+        <div class="lh-sub">Draft a scrappy coalition from scattered nations, spin for a battlefield, and see if your mismatched grid can out-muscle the local powers.</div>
+      </div>
+      <div class="lh-right">
+        <div class="seal">🌍</div>
+        <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()">🌙 Dark</button>
+      </div>
+    </div>
+    <div class="phase-track" id="phaseTrack">
+      <div class="phase-chip" data-p="0">1 · Briefing</div>
+      <div class="phase-chip" data-p="1">2 · Draft Grid</div>
+      <div class="phase-chip" data-p="2">3 · Region Reel</div>
+      <div class="phase-chip" data-p="3">4 · Campaign</div>
+    </div>
+    <div class="session-bar hidden" id="sessionBar">
+      <div class="session-chip" id="diffChip">Difficulty: Easy</div>
+      <div class="session-chip" id="rerollChip">Rerolls: 3/3</div>
+      <label class="switch-wrap">
+        <span class="switch"><input type="checkbox" id="statsToggle" checked onchange="onStatsToggle()"><span class="switch-slider"></span></span>
+        Show Stats
+      </label>
+    </div>
+  </div>
+
+  <!-- PHASE 0: BRIEFING -->
+  <div class="panel" id="panel-brief">
+    <h2>Mission Briefing</h2>
+    <p class="desc">
+      Eight category slots sit open on your grid: Population, Land Mass, Military Budget, Coastline, GDP, Airports,
+      Internet Access, and Renewable Energy. Nations get pulled from the global pool one at a time — you decide which
+      open slot each one fills before it locks for good.
+    </p>
+    <p class="desc">
+      Once your grid is full, spin the region reel for a real-world battlefield. Three native rival nations rise to
+      defend it, each boosted by Home Field Advantage. Choose your difficulty below, then begin.
+    </p>
+
+    <div class="diff-select" id="diffSelect">
+      <div class="diff-opt active" data-d="easy">
+        <div class="diff-name">Easy</div>
+        <div class="diff-desc">3 rerolls · all stats visible while drafting</div>
+      </div>
+      <div class="diff-opt" data-d="medium">
+        <div class="diff-name">Medium</div>
+        <div class="diff-desc">1 reroll · all stats visible while drafting</div>
+      </div>
+      <div class="diff-opt" data-d="hard">
+        <div class="diff-name">Hard</div>
+        <div class="diff-desc">No rerolls · stats hidden — draft blind</div>
+      </div>
+    </div>
+
+    <button class="btn primary" onclick="startDraft()">Begin Draft →</button>
+  </div>
+
+  <!-- PHASE 1: DRAFT -->
+  <div class="panel hidden" id="panel-draft">
+    <h2>Draft Grid</h2>
+    <p class="desc">Assign the incoming nation to an open category. That category inherits its real stat and locks in.</p>
+
+    <div class="incoming" id="incomingBox"></div>
+
+    <div class="slots" id="slotsBox"></div>
+
+    <button class="btn primary hidden" id="toWheelBtn" onclick="startWheel()">Grid Locked — Spin for a Region →</button>
+  </div>
+
+  <!-- PHASE 2: REGION REEL -->
+  <div class="panel hidden" id="panel-wheel">
+    <h2>Region Reel</h2>
+    <p class="desc">Spin to determine the sub-region where your coalition makes its stand.</p>
+    <div class="reel-area">
+      <div class="reel-outer">
+        <div class="reel-window">
+          <div class="reel-fade-top"></div>
+          <div class="reel-list" id="reelList"></div>
+          <div class="reel-highlight"></div>
+          <div class="reel-fade-bot"></div>
+        </div>
+      </div>
+      <div class="reel-result" id="reelResult">&nbsp;</div>
+      <button class="btn primary" id="spinBtn" onclick="spinReel()">Spin the Reel</button>
+      <button class="btn primary hidden" id="toCampaignBtn" onclick="startCampaign()">Deploy to Theater →</button>
+    </div>
+  </div>
+
+  <!-- PHASE 3: CAMPAIGN -->
+  <div class="panel hidden" id="panel-campaign">
+    <h2>Campaign Simulation</h2>
+    <p class="desc" id="campaignDesc"></p>
+    <div class="rival-cards" id="rivalCards"></div>
+    <div class="terminal" id="terminal"></div>
+    <div id="resultArea" style="margin-top:18px;"></div>
+    <button class="btn ghost hidden" id="playAgainBtn" onclick="location.reload()">Run New Campaign</button>
+  </div>
+
+  <footer>ALL FIGURES ARE ROUGH, ROUNDED, GAME-BALANCED APPROXIMATIONS — NOT A GEOPOLITICAL OR MILITARY REFERENCE.</footer>
+</div>
+
+<script>
+/* ============ DATA ============ */
+// pop: millions | area: thousand km² | mil: $B | coast: km | gdp: $B | airports: count | internet: % | renew: % | lat/lon: approx center
+const COUNTRIES = [
+  {n:"United States",r:"North America",pop:335,area:9834,mil:916,coast:19924,gdp:27000,airports:13000,internet:91,renew:21,lat:39,lon:-98},
+  {n:"Canada",r:"North America",pop:39,area:9985,mil:27,coast:202080,gdp:2100,airports:1400,internet:93,renew:68,lat:60,lon:-95},
+  {n:"Mexico",r:"North America",pop:129,area:1964,mil:8,coast:9330,gdp:1800,airports:1700,internet:75,renew:25,lat:23,lon:-102},
+
+  {n:"Guatemala",r:"Central America",pop:18,area:109,mil:0.3,coast:400,gdp:100,airports:300,internet:65,renew:60,lat:15.5,lon:-90.2},
+  {n:"Panama",r:"Central America",pop:4.4,area:75,mil:0.6,coast:2490,gdp:75,airports:100,internet:70,renew:70,lat:8.5,lon:-80.8},
+  {n:"Honduras",r:"Central America",pop:10,area:112,mil:0.4,coast:820,gdp:32,airports:100,internet:43,renew:60,lat:15,lon:-86.5},
+  {n:"Costa Rica",r:"Central America",pop:5.2,area:51,mil:0.02,coast:1290,gdp:68,airports:150,internet:87,renew:98,lat:9.7,lon:-83.8},
+
+  {n:"Cuba",r:"Caribbean",pop:11,area:110,mil:1,coast:3735,gdp:107,airports:130,internet:70,renew:5,lat:21.5,lon:-79.5},
+  {n:"Dominican Republic",r:"Caribbean",pop:11,area:48.7,mil:0.7,coast:1288,gdp:121,airports:36,internet:82,renew:18,lat:18.7,lon:-70.2},
+  {n:"Jamaica",r:"Caribbean",pop:2.8,area:10.8,mil:0.2,coast:1022,gdp:19,airports:30,internet:65,renew:15,lat:18.1,lon:-77.3},
+  {n:"Haiti",r:"Caribbean",pop:11.5,area:27.8,mil:0.05,coast:1771,gdp:21,airports:15,internet:40,renew:35,lat:19,lon:-72.4},
+
+  {n:"Brazil",r:"South America",pop:216,area:8516,mil:20,coast:7491,gdp:2170,airports:4000,internet:84,renew:45,lat:-10,lon:-55},
+  {n:"Argentina",r:"South America",pop:46,area:2780,mil:3,coast:4989,gdp:640,airports:1100,internet:87,renew:13,lat:-34,lon:-64},
+  {n:"Chile",r:"South America",pop:19.6,area:756,mil:5.5,coast:6435,gdp:335,airports:480,internet:89,renew:45,lat:-35,lon:-71},
+  {n:"Peru",r:"South America",pop:34,area:1285,mil:2.7,coast:2414,gdp:270,airports:200,internet:70,renew:40,lat:-10,lon:-76},
+  {n:"Colombia",r:"South America",pop:52,area:1142,mil:10,coast:3208,gdp:365,airports:900,internet:70,renew:30,lat:4,lon:-72},
+
+  {n:"Germany",r:"Western Europe",pop:84,area:357,mil:66,coast:2389,gdp:4500,airports:540,internet:92,renew:46,lat:51,lon:10},
+  {n:"France",r:"Western Europe",pop:68,area:551,mil:61,coast:4853,gdp:3050,airports:460,internet:92,renew:25,lat:46,lon:2},
+  {n:"Netherlands",r:"Western Europe",pop:18,area:41.5,mil:13,coast:451,gdp:1100,airports:30,internet:96,renew:15,lat:52.3,lon:5.75},
+  {n:"Belgium",r:"Western Europe",pop:11.7,area:30.5,mil:6,coast:66,gdp:630,airports:40,internet:94,renew:22,lat:50.8,lon:4.5},
+
+  {n:"United Kingdom",r:"Northern Europe",pop:68,area:244,mil:68,coast:12429,gdp:3400,airports:460,internet:96,renew:42,lat:54,lon:-2},
+  {n:"Sweden",r:"Northern Europe",pop:10.5,area:450,mil:9,coast:3218,gdp:590,airports:230,internet:96,renew:68,lat:62,lon:15},
+  {n:"Norway",r:"Northern Europe",pop:5.5,area:385,mil:8.5,coast:25148,gdp:500,airports:100,internet:99,renew:98,lat:61,lon:8.5},
+  {n:"Denmark",r:"Northern Europe",pop:5.9,area:43,mil:6,coast:7314,gdp:400,airports:80,internet:98,renew:55,lat:56,lon:10},
+
+  {n:"Italy",r:"Southern Europe",pop:59,area:301,mil:33,coast:7600,gdp:2200,airports:130,internet:82,renew:40,lat:43,lon:12.5},
+  {n:"Spain",r:"Southern Europe",pop:47.5,area:505,mil:20,coast:4964,gdp:1580,airports:150,internet:94,renew:46,lat:40,lon:-4},
+  {n:"Greece",r:"Southern Europe",pop:10.4,area:132,mil:8,coast:13676,gdp:240,airports:80,internet:79,renew:43,lat:39,lon:22},
+  {n:"Portugal",r:"Southern Europe",pop:10.3,area:92,mil:3.5,coast:1793,gdp:280,airports:65,internet:84,renew:61,lat:39.5,lon:-8},
+
+  {n:"Poland",r:"Eastern Europe",pop:37,area:313,mil:32,coast:440,gdp:810,airports:130,internet:87,renew:20,lat:52,lon:19.5},
+  {n:"Ukraine",r:"Eastern Europe",pop:37,area:604,mil:65,coast:2782,gdp:180,airports:190,internet:75,renew:12,lat:49,lon:32},
+  {n:"Romania",r:"Eastern Europe",pop:19,area:238,mil:8,coast:225,gdp:350,airports:50,internet:85,renew:40,lat:46,lon:25},
+  {n:"Czechia",r:"Eastern Europe",pop:10.9,area:79,mil:5,coast:0,gdp:330,airports:90,internet:88,renew:17,lat:49.8,lon:15.5},
+
+  {n:"Egypt",r:"North Africa",pop:112,area:1002,mil:5.6,coast:2450,gdp:400,airports:90,internet:72,renew:12,lat:27,lon:30},
+  {n:"Algeria",r:"North Africa",pop:46,area:2382,mil:18,coast:998,gdp:240,airports:150,internet:71,renew:1,lat:28,lon:3},
+  {n:"Morocco",r:"North Africa",pop:37.8,area:447,mil:5.4,coast:1835,gdp:145,airports:60,internet:84,renew:20,lat:32,lon:-6},
+  {n:"Libya",r:"North Africa",pop:6.9,area:1760,mil:3,coast:1770,gdp:45,airports:140,internet:45,renew:1,lat:27,lon:17},
+
+  {n:"Nigeria",r:"West Africa",pop:228,area:924,mil:3.1,coast:853,gdp:470,airports:55,internet:55,renew:25,lat:9.1,lon:8.7},
+  {n:"Ghana",r:"West Africa",pop:34,area:239,mil:0.3,coast:539,gdp:76,airports:12,internet:68,renew:40,lat:7.9,lon:-1.0},
+  {n:"Senegal",r:"West Africa",pop:18,area:197,mil:0.5,coast:531,gdp:32,airports:20,internet:46,renew:30,lat:14.5,lon:-14.5},
+  {n:"Ivory Coast",r:"West Africa",pop:29,area:322,mil:0.6,coast:515,gdp:78,airports:30,internet:46,renew:35,lat:7.5,lon:-5.5},
+  {n:"Mali",r:"West Africa",pop:23,area:1240,mil:0.6,coast:0,gdp:20,airports:30,internet:35,renew:30,lat:17,lon:-4},
+
+  {n:"DR Congo",r:"Central Africa",pop:102,area:2345,mil:0.5,coast:37,gdp:68,airports:200,internet:23,renew:95,lat:-2.9,lon:23.6},
+  {n:"Cameroon",r:"Central Africa",pop:28,area:476,mil:0.4,coast:402,gdp:47,airports:25,internet:40,renew:80,lat:5.7,lon:12.7},
+  {n:"Chad",r:"Central Africa",pop:18,area:1284,mil:0.3,coast:0,gdp:12,airports:60,internet:15,renew:10,lat:15.5,lon:19},
+  {n:"Gabon",r:"Central Africa",pop:2.4,area:268,mil:0.2,coast:885,gdp:21,airports:45,internet:63,renew:60,lat:-0.8,lon:11.6},
+
+  {n:"Ethiopia",r:"East Africa",pop:128,area:1104,mil:0.5,coast:0,gdp:155,airports:60,internet:20,renew:92,lat:9.1,lon:40.5},
+  {n:"Kenya",r:"East Africa",pop:55,area:580,mil:1.2,coast:536,gdp:118,airports:200,internet:40,renew:90,lat:0.0,lon:37.9},
+  {n:"Tanzania",r:"East Africa",pop:67,area:947,mil:0.4,coast:1424,gdp:85,airports:130,internet:30,renew:65,lat:-6.4,lon:34.9},
+  {n:"Uganda",r:"East Africa",pop:48,area:241,mil:0.4,coast:0,gdp:50,airports:50,internet:25,renew:85,lat:1.4,lon:32.3},
+  {n:"Somalia",r:"East Africa",pop:18,area:638,mil:0.03,coast:3025,gdp:10,airports:60,internet:8,renew:30,lat:5.2,lon:46.2},
+
+  {n:"South Africa",r:"Southern Africa",pop:60,area:1221,mil:3.3,coast:2798,gdp:400,airports:550,internet:72,renew:8,lat:-29,lon:24},
+  {n:"Namibia",r:"Southern Africa",pop:2.6,area:824,mil:0.5,coast:1572,gdp:13,airports:100,internet:55,renew:33,lat:-22,lon:17},
+  {n:"Zimbabwe",r:"Southern Africa",pop:16,area:391,mil:0.3,coast:0,gdp:27,airports:20,internet:35,renew:40,lat:-19,lon:30},
+  {n:"Zambia",r:"Southern Africa",pop:20,area:753,mil:0.3,coast:0,gdp:30,airports:90,internet:30,renew:84,lat:-13,lon:27.9},
+
+  {n:"Saudi Arabia",r:"Middle East",pop:36,area:2150,mil:75,coast:2640,gdp:1070,airports:220,internet:100,renew:1,lat:24,lon:45},
+  {n:"Iran",r:"Middle East",pop:89,area:1648,mil:10,coast:2440,gdp:460,airports:300,internet:78,renew:5,lat:32,lon:53},
+  {n:"Israel",r:"Middle East",pop:9.7,area:22,mil:24,coast:273,gdp:520,airports:50,internet:90,renew:10,lat:31,lon:35},
+  {n:"United Arab Emirates",r:"Middle East",pop:9.4,area:83.6,mil:22,coast:1318,gdp:500,airports:40,internet:100,renew:5,lat:24,lon:54},
+  {n:"Turkey",r:"Middle East",pop:85,area:785,mil:15,coast:7200,gdp:1150,airports:100,internet:83,renew:45,lat:39,lon:35},
+
+  {n:"Kazakhstan",r:"Central Asia",pop:20,area:2725,mil:1.5,coast:0,gdp:260,airports:90,internet:90,renew:10,lat:48,lon:68},
+  {n:"Uzbekistan",r:"Central Asia",pop:35,area:449,mil:1,coast:0,gdp:90,airports:50,internet:78,renew:12,lat:41,lon:64},
+  {n:"Turkmenistan",r:"Central Asia",pop:6.5,area:488,mil:0.2,coast:1768,gdp:55,airports:26,internet:38,renew:0,lat:39,lon:59},
+
+  {n:"India",r:"South Asia",pop:1428,area:3287,mil:81,coast:7000,gdp:3700,airports:480,internet:52,renew:42,lat:21,lon:78},
+  {n:"Pakistan",r:"South Asia",pop:240,area:796,mil:10,coast:1046,gdp:375,airports:150,internet:45,renew:40,lat:30,lon:70},
+  {n:"Bangladesh",r:"South Asia",pop:172,area:148,mil:4,coast:580,gdp:460,airports:20,internet:45,renew:4,lat:24,lon:90},
+  {n:"Sri Lanka",r:"South Asia",pop:22,area:65.6,mil:1.5,coast:1340,gdp:84,airports:18,internet:58,renew:40,lat:7.9,lon:80.8},
+
+  {n:"China",r:"East Asia",pop:1412,area:9597,mil:296,coast:14500,gdp:18500,airports:500,internet:76,renew:31,lat:35,lon:105},
+  {n:"Japan",r:"East Asia",pop:124,area:378,mil:47,coast:29751,gdp:4200,airports:175,internet:93,renew:22,lat:36,lon:138},
+  {n:"South Korea",r:"East Asia",pop:51.7,area:100,mil:46,coast:2413,gdp:1760,airports:110,internet:97,renew:9,lat:36,lon:128},
+  {n:"Mongolia",r:"East Asia",pop:3.4,area:1564,mil:0.1,coast:0,gdp:19,airports:40,internet:78,renew:20,lat:46,lon:104},
+
+  {n:"Indonesia",r:"Southeast Asia",pop:277,area:1905,mil:9,coast:54716,gdp:1400,airports:680,internet:79,renew:15,lat:-2,lon:118},
+  {n:"Vietnam",r:"Southeast Asia",pop:98,area:331,mil:8,coast:3444,gdp:470,airports:22,internet:79,renew:40,lat:16,lon:108},
+  {n:"Thailand",r:"Southeast Asia",pop:71,area:513,mil:5.7,coast:3219,gdp:540,airports:100,internet:88,renew:18,lat:15,lon:101},
+  {n:"Philippines",r:"Southeast Asia",pop:117,area:300,mil:4,coast:36289,gdp:460,airports:250,internet:73,renew:30,lat:13,lon:122},
+  {n:"Malaysia",r:"Southeast Asia",pop:34,area:330,mil:4.5,coast:4675,gdp:430,airports:65,internet:97,renew:25,lat:2.5,lon:112.5},
+
+  {n:"Australia",r:"Oceania",pop:26,area:7692,mil:32,coast:25760,gdp:1700,airports:2000,internet:96,renew:35,lat:-25,lon:134},
+  {n:"New Zealand",r:"Oceania",pop:5.2,area:268,mil:2,coast:15134,gdp:250,airports:120,internet:92,renew:82,lat:-41,lon:174},
+  {n:"Papua New Guinea",r:"Oceania",pop:10.3,area:462,mil:0.1,coast:5152,gdp:32,airports:560,internet:20,renew:60,lat:-6,lon:147},
+  {n:"Fiji",r:"Oceania",pop:0.94,area:18.3,mil:0.05,coast:1129,gdp:5.6,airports:28,internet:60,renew:45,lat:-17.7,lon:178},
+];
+
+const CATEGORIES = [
+  {key:"pop",      label:"Population",       color:"#4C8DFF", fmt:v=>fmtNum(v)+"M"},
+  {key:"area",     label:"Land Mass",        color:"#3FA65A", fmt:v=>fmtNum(v)+"k km²"},
+  {key:"mil",      label:"Military Budget",  color:"#F0704B", fmt:v=>"$"+fmtNum(v)+"B"},
+  {key:"coast",    label:"Coastline",        color:"#2EC4C6", fmt:v=>fmtNum(v)+" km"},
+  {key:"gdp",      label:"GDP",              color:"#F0B429", fmt:v=>"$"+fmtNum(v)+"B"},
+  {key:"airports", label:"Airports",         color:"#9B6BF2", fmt:v=>fmtNum(v)},
+  {key:"internet", label:"Internet Access",  color:"#29B6D8", fmt:v=>fmtNum(v)+"%"},
+  {key:"renew",    label:"Renewable Energy", color:"#7BC96F", fmt:v=>fmtNum(v)+"%"},
+];
+
+const HFA_MULT = 1.25; // Home Field Advantage: +25%
+
+function fmtNum(v){
+  if(v>=1000) return Math.round(v).toLocaleString();
+  if(v>=10) return v.toFixed(1).replace(/\.0$/,'');
+  return v.toFixed(2).replace(/0$/,'').replace(/\.$/,'');
+}
+
+const CAT_MAX = {};
+CATEGORIES.forEach(c=>{ CAT_MAX[c.key] = Math.max(...COUNTRIES.map(x=>x[c.key])); });
+
+function scoreOf(key, value){
+  const max = CAT_MAX[key];
+  const s = (Math.log10(value+1) / Math.log10(max+1)) * 100;
+  return Math.max(0, Math.min(100, s));
+}
+
+const REGIONS = [...new Set(COUNTRIES.map(c=>c.r))];
+
+/* ============ THEME ============ */
+function toggleTheme(){
+  const dark = document.body.classList.toggle('dark');
+  document.getElementById('themeToggle').textContent = dark ? '☀️ Light' : '🌙 Dark';
+}
+
+/* ============ DIFFICULTY ============ */
+let difficulty = 'easy';
+document.querySelectorAll('.diff-opt').forEach(opt=>{
+  opt.addEventListener('click', ()=>{
+    document.querySelectorAll('.diff-opt').forEach(o=>o.classList.remove('active'));
+    opt.classList.add('active');
+    difficulty = opt.dataset.d;
+  });
+});
+
+/* ============ STATE ============ */
+let deck = [];
+let deckPtr = 0;
+let grid = {};
+let rerollsMax = 3;
+let rerollsRemaining = 3;
+let statsVisible = true;
+let chosenRegion = null;
+let rivals = [];
+
+function shuffle(arr){
+  const a=[...arr];
+  for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+  return a;
+}
+
+function setPhase(n){
+  document.querySelectorAll('.phase-chip').forEach(chip=>{
+    const p = +chip.dataset.p;
+    chip.classList.toggle('active', p===n);
+    chip.classList.toggle('done', p<n);
+  });
+}
+
+function updateSessionBar(){
+  const diffNames = {easy:'Easy', medium:'Medium', hard:'Hard'};
+  document.getElementById('diffChip').textContent = 'Difficulty: ' + diffNames[difficulty];
+  document.getElementById('rerollChip').textContent = 'Rerolls: ' + rerollsRemaining + '/' + rerollsMax;
+  document.getElementById('rerollChip').classList.toggle('hidden', rerollsMax===0);
+  document.getElementById('statsToggle').checked = statsVisible;
+}
+
+function onStatsToggle(){
+  statsVisible = document.getElementById('statsToggle').checked;
+  if(!document.getElementById('panel-draft').classList.contains('hidden')) renderIncoming();
+  if(!document.getElementById('panel-campaign').classList.contains('hidden') && rivals.length) renderRivalCards();
+}
+
+/* ============ PHASE 1: DRAFT ============ */
+function startDraft(){
+  document.getElementById('panel-brief').classList.add('hidden');
+  document.getElementById('panel-draft').classList.remove('hidden');
+  document.getElementById('sessionBar').classList.remove('hidden');
+  setPhase(1);
+
+  rerollsMax = difficulty==='easy' ? 3 : (difficulty==='medium' ? 1 : 0);
+  rerollsRemaining = rerollsMax;
+  statsVisible = difficulty !== 'hard';
+
+  deck = shuffle(COUNTRIES);
+  deckPtr = 0;
+  grid = {};
+
+  updateSessionBar();
+  renderSlots();
+  renderIncoming();
+}
+
+function assignedCount(){ return Object.keys(grid).length; }
+
+function renderIncoming(){
+  const box = document.getElementById('incomingBox');
+  if(assignedCount() >= CATEGORIES.length){
+    box.classList.add('hidden');
+    document.getElementById('toWheelBtn').classList.remove('hidden');
+    return;
+  }
+  const c = deck[deckPtr];
+  box.classList.remove('hidden');
+  const statsHtml = statsVisible
+    ? `<div class="incoming-stats">${CATEGORIES.map(cat=>`
+        <div class="ichip" style="background:${cat.color}22;">
+          ${cat.label}<b>${cat.fmt(c[cat.key])}</b>
+        </div>`).join('')}</div>`
+    : `<div class="stats-hidden-msg">🙈 Stats hidden — assign this one blind.</div>`;
+  box.innerHTML = `
+    <div class="incoming-top">
+      <div>
+        <div class="incoming-label">Incoming Nation ${assignedCount()+1} / ${CATEGORIES.length}</div>
+        <div class="incoming-name">${c.n}</div>
+      </div>
+      <button class="btn small" id="rerollBtn" onclick="rerollIncoming()" ${rerollsRemaining<=0?'disabled':''}>🔁 Reroll (${rerollsRemaining} left)</button>
+    </div>
+    ${statsHtml}
+  `;
+}
+
+function rerollIncoming(){
+  if(rerollsRemaining<=0) return;
+  deckPtr++;
+  rerollsRemaining--;
+  updateSessionBar();
+  renderIncoming();
+}
+
+function renderSlots(){
+  const box = document.getElementById('slotsBox');
+  box.innerHTML = '';
+  CATEGORIES.forEach(cat=>{
+    const filled = grid[cat.key];
+    const div = document.createElement('div');
+    const canAssign = !filled && assignedCount() < CATEGORIES.length;
+    div.className = 'slot' + (filled ? ' locked' : (canAssign ? '' : ' disabled'));
+    if(filled){
+      div.innerHTML = `
+        <div class="lockbadge">✓ LOCKED</div>
+        <div class="slot-label"><span class="dot" style="background:${cat.color}"></span>${cat.label}</div>
+        <div class="slot-country">${filled.country}</div>
+        <div class="slot-value">${cat.fmt(filled.value)}</div>
+      `;
+    } else {
+      div.innerHTML = `
+        <div class="slot-label"><span class="dot" style="background:${cat.color}"></span>${cat.label}</div>
+        <div class="slot-open-msg">${canAssign ? 'Tap to assign incoming nation →' : 'Open slot'}</div>
+      `;
+      if(canAssign){
+        div.onclick = ()=>assignSlot(cat.key);
+      }
+    }
+    box.appendChild(div);
+  });
+}
+
+function assignSlot(key){
+  if(grid[key] || assignedCount() >= CATEGORIES.length) return;
+  const c = deck[deckPtr];
+  grid[key] = {country:c.n, value:c[key]};
+  deckPtr++;
+  renderSlots();
+  renderIncoming();
+}
+
+/* ============ PHASE 2: REGION REEL ============ */
+const REEL_ROW_H = 50;
+const REEL_REPEATS = 9;
+let reelSpinning = false;
+
+function buildReelList(){
+  const list = document.getElementById('reelList');
+  let html = '';
+  for(let r=0;r<REEL_REPEATS;r++){
+    REGIONS.forEach(reg=>{ html += `<div class="reel-item">${reg}</div>`; });
+  }
+  list.innerHTML = html;
+  list.style.transition = 'none';
+  list.style.transform = 'translateY(0px)';
+}
+
+function startWheel(){
+  document.getElementById('panel-draft').classList.add('hidden');
+  document.getElementById('panel-wheel').classList.remove('hidden');
+  setPhase(2);
+  buildReelList();
+}
+
+function spinReel(){
+  if(reelSpinning) return;
+  reelSpinning = true;
+  document.getElementById('spinBtn').disabled = true;
+  document.getElementById('reelResult').textContent = '';
+
+  const chosenIndex = Math.floor(Math.random()*REGIONS.length);
+  chosenRegion = REGIONS[chosenIndex];
+
+  const targetRepeat = 6;
+  const targetRow = targetRepeat*REGIONS.length + chosenIndex;
+  const offset = targetRow*REEL_ROW_H - REEL_ROW_H;
+
+  const list = document.getElementById('reelList');
+  list.style.transition = 'transform 3.1s cubic-bezier(.13,.7,.1,1)';
+  requestAnimationFrame(()=>{ list.style.transform = `translateY(-${offset}px)`; });
+
+  setTimeout(()=>{
+    document.getElementById('reelResult').textContent = '📍 ' + chosenRegion;
+    document.getElementById('toCampaignBtn').classList.remove('hidden');
+    reelSpinning = false;
+  }, 3200);
+}
+
+/* ============ PHASE 3: CAMPAIGN ============ */
+function startCampaign(){
+  document.getElementById('panel-wheel').classList.add('hidden');
+  document.getElementById('panel-campaign').classList.remove('hidden');
+  setPhase(3);
+
+  const pool = COUNTRIES.filter(c=>c.r===chosenRegion);
+  rivals = shuffle(pool).slice(0,3);
+
+  document.getElementById('campaignDesc').textContent =
+    `Theater: ${chosenRegion}. Three native powers rise to defend home ground, each running +${Math.round((HFA_MULT-1)*100)}% Home Field Advantage.`;
+
+  renderRivalCards();
+  runBattleLog();
+}
+
+function renderRivalCards(){
+  const box = document.getElementById('rivalCards');
+  box.innerHTML = '';
+  rivals.forEach(rv=>{
+    const div = document.createElement('div');
+    div.className = 'rival-card';
+    const statsHtml = statsVisible
+      ? `<div class="rival-stats">${CATEGORIES.map(cat=>`<div><span>${cat.label}</span><b>${cat.fmt(rv[cat.key]*HFA_MULT)}</b></div>`).join('')}</div>`
+      : `<div class="stats-hidden-msg">🙈 Stats hidden</div>`;
+    div.innerHTML = `
+      <div class="rival-tag">Home Field +${Math.round((HFA_MULT-1)*100)}%</div>
+      <div class="rival-name">${rv.n}</div>
+      ${statsHtml}
+    `;
+    box.appendChild(div);
+  });
+}
+
+function computePlayerScores(){
+  return CATEGORIES.map(c=>scoreOf(c.key, grid[c.key].value));
+}
+function computeRivalScoresAvg(){
+  return CATEGORIES.map(c=>{
+    const vals = rivals.map(rv=>scoreOf(c.key, rv[c.key]*HFA_MULT));
+    return vals.reduce((a,b)=>a+b,0)/vals.length;
+  });
+}
+
+function runBattleLog(){
+  const term = document.getElementById('terminal');
+  term.textContent = '';
+  const lines = [
+    {t:`> Establishing link to the ${chosenRegion} theater...`, cls:'line-teal'},
+    {t:`> Loading coalition grid: ${CATEGORIES.map(c=>grid[c.key].country+' ('+c.label+')').join(', ')}`, cls:''},
+    {t:`> Loading regional bloc: ${rivals.map(r=>r.n).join(', ')}`, cls:'line-coral'},
+    {t:`> Applying Home Field Advantage: +${Math.round((HFA_MULT-1)*100)}% to bloc stats...`, cls:'line-coral'},
+    {t:`> Running balance algorithm across ${CATEGORIES.length} categories...`, cls:''},
+    {t:`> Rolling fog-of-war variance...`, cls:''},
+  ];
+  let i=0;
+  function step(){
+    if(i<lines.length){
+      const l = lines[i];
+      const span = document.createElement('div');
+      span.className = l.cls;
+      span.textContent = l.t;
+      term.appendChild(span);
+      i++;
+      setTimeout(step, 400);
+    } else {
+      const cur = document.createElement('span');
+      cur.className='cursor';
+      term.appendChild(cur);
+      setTimeout(resolveBattle, 450);
+    }
+  }
+  step();
+}
+
+function clashRow(label, color, youScore, blocScore, big){
+  const youWins = youScore >= blocScore;
+  return `
+    <div class="clash-row${big?' big':''}">
+      <div class="clash-toprow">
+        <div class="clash-cat${big?' big':''}">${color?`<span class="dot" style="background:${color}"></span>`:''}${label}</div>
+        <div class="clash-winmark ${youWins?'you':'bloc'}">${youWins?'▲ You':'▼ Bloc'}</div>
+      </div>
+      <div class="clash-track">
+        <div class="clash-half you"><div class="clash-fill you" data-w="${youScore}"></div></div>
+        <div class="clash-half bloc"><div class="clash-fill bloc" data-w="${blocScore}"></div></div>
+      </div>
+      <div class="clash-vals"><span>You: ${youScore.toFixed(0)}</span><span>Bloc: ${blocScore.toFixed(0)}</span></div>
+    </div>
+  `;
+}
+
+/* ---- Theater map ---- */
+const WORLD_BLOBS = [
+  "M120,70 L200,40 L290,55 L330,110 L300,170 L260,190 L230,230 L215,260 L195,270 L170,240 L150,190 L120,140 Z",
+  "M255,275 L300,290 L320,330 L310,380 L285,430 L255,420 L235,370 L230,320 Z",
+  "M460,70 L520,55 L560,75 L555,110 L520,135 L480,130 L460,100 Z",
+  "M480,155 L540,150 L575,190 L570,250 L550,300 L520,330 L495,320 L475,270 L465,210 Z",
+  "M560,90 L650,50 L750,55 L850,70 L900,110 L880,150 L830,140 L780,170 L760,220 L700,250 L650,230 L600,190 L570,150 Z",
+  "M840,335 L900,330 L920,360 L905,400 L860,405 L835,375 Z"
+];
+function latLonToXY(lat, lon){
+  return [ (lon+180)/360*1000, (90-lat)/180*500 ];
+}
+function renderTheaterMap(){
+  const usedNames = new Set();
+  const coalitionCountries = CATEGORIES
+    .map(c=>grid[c.key].country)
+    .filter(name=>{ if(usedNames.has(name)) return false; usedNames.add(name); return true; })
+    .map(name=>COUNTRIES.find(c=>c.n===name))
+    .filter(Boolean);
+
+  let pins = '';
+  coalitionCountries.forEach(c=>{
+    const [x,y] = latLonToXY(c.lat, c.lon);
+    pins += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="6" fill="var(--teal)" stroke="var(--card)" stroke-width="1.6"><title>${c.n} (Coalition)</title></circle>`;
+  });
+
+  let rivalXY = [];
+  rivals.forEach(rv=>{
+    const [x,y] = latLonToXY(rv.lat, rv.lon);
+    rivalXY.push([x,y]);
+    pins += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="7" fill="var(--coral)" stroke="var(--card)" stroke-width="1.8"><title>${rv.n} (Regional Bloc)</title></circle>`;
+    pins += `<text x="${x.toFixed(1)}" y="${(y-11).toFixed(1)}" text-anchor="middle" font-family="Nunito,sans-serif" font-weight="800" font-size="12" fill="var(--coral-dark)">${rv.n}</text>`;
+  });
+
+  let haloSvg = '';
+  if(rivalXY.length){
+    const cx = rivalXY.reduce((a,p)=>a+p[0],0)/rivalXY.length;
+    const cy = rivalXY.reduce((a,p)=>a+p[1],0)/rivalXY.length;
+    haloSvg = `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="65" fill="var(--gold)" fill-opacity="0.18" stroke="var(--gold)" stroke-width="2" stroke-dasharray="5 4"/>`;
+  }
+
+  const blobs = WORLD_BLOBS.map(d=>`<path d="${d}" fill="var(--map-land)" stroke="var(--line)" stroke-width="1"/>`).join('');
+
+  return `
+    <div class="map-section">
+      <div class="map-title">🗺️ Theater Map — ${chosenRegion}</div>
+      <div class="map-box">
+        <svg viewBox="0 0 1000 500" width="100%" height="auto" style="display:block;">
+          ${blobs}
+          ${haloSvg}
+          ${pins}
+        </svg>
+      </div>
+      <div class="map-legend">
+        <span><span class="legend-dot" style="background:var(--teal)"></span>Your Coalition</span>
+        <span><span class="legend-dot" style="background:var(--coral)"></span>Regional Bloc</span>
+        <span><span class="legend-dot" style="background:var(--gold)"></span>Theater Zone</span>
+      </div>
+    </div>
+  `;
+}
+
+function resolveBattle(){
+  const playerScores = computePlayerScores();
+  const blocScoresAvg = computeRivalScoresAvg();
+  const playerAvg = playerScores.reduce((a,b)=>a+b,0)/playerScores.length;
+  const blocAvg = blocScoresAvg.reduce((a,b)=>a+b,0)/blocScoresAvg.length;
+
+  const playerVar = (Math.random()*14)-7;
+  const blocVar = (Math.random()*14)-7;
+  const playerFinal = Math.max(0, Math.min(100, playerAvg + playerVar));
+  const blocFinal = Math.max(0, Math.min(100, blocAvg + blocVar));
+
+  const win = playerFinal >= blocFinal;
+  const margin = Math.abs(playerFinal - blocFinal).toFixed(1);
+
+  const term = document.getElementById('terminal');
+  const finalLine = document.createElement('div');
+  finalLine.className = win ? 'line-teal' : 'line-coral';
+  finalLine.textContent = `> RESULT: Coalition ${playerFinal.toFixed(1)} vs Regional Bloc ${blocFinal.toFixed(1)} — ${win?'COALITION HOLDS':'BLOC BREAKS THROUGH'}`;
+  term.appendChild(finalLine);
+
+  const resultArea = document.getElementById('resultArea');
+  resultArea.innerHTML = `
+    <div class="result-banner ${win?'win':'loss'}">
+      <div class="result-title ${win?'win':'loss'}">${win?'Victory!':'Defeat'}</div>
+      <div class="result-margin">Decided by ${margin} composite points · Theater: ${chosenRegion}</div>
+    </div>
+
+    ${renderTheaterMap()}
+
+    <div class="clash-block">
+      <div class="clash-legend">
+        <span><span class="legend-dot" style="background:var(--teal)"></span>Your Coalition</span>
+        <span><span class="legend-dot" style="background:var(--coral)"></span>${chosenRegion} Bloc</span>
+      </div>
+      ${clashRow('Overall Power', null, playerFinal, blocFinal, true)}
+    </div>
+
+    <div class="clash-block">
+      ${CATEGORIES.map((c,idx)=>clashRow(c.label + ' — ' + grid[c.key].country, c.color, playerScores[idx], blocScoresAvg[idx], false)).join('')}
+    </div>
+  `;
+
+  requestAnimationFrame(()=>{
+    setTimeout(()=>{
+      document.querySelectorAll('.clash-fill').forEach((el,idx)=>{
+        const w = el.getAttribute('data-w');
+        setTimeout(()=>{ el.style.width = w+'%'; }, idx*35);
+      });
+    }, 30);
+  });
+
+  document.getElementById('playAgainBtn').classList.remove('hidden');
+}
+</script>
+</body>
+</html>
