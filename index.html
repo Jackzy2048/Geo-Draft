@@ -45,8 +45,6 @@
   .header-actions{display:flex; gap:8px; flex-wrap:wrap; margin-top:14px;}
   .icon-btn{font-family:'Nunito',sans-serif; font-weight:700; font-size:12px; border:1.5px solid var(--line); background:var(--card-alt); color:var(--ink-soft); border-radius:999px; padding:6px 12px; cursor:pointer;}
   .icon-btn:hover{border-color:var(--teal); color:var(--teal-dark);}
-  .fab-help{position:fixed; top:16px; right:16px; z-index:150; width:42px; height:42px; border-radius:50%; background:var(--teal); color:#fff; font-family:'Fredoka',sans-serif; font-weight:700; font-size:19px; border:none; box-shadow:var(--shadow); cursor:pointer; display:flex; align-items:center; justify-content:center;}
-  .fab-help:hover{background:var(--teal-dark);}
 
   .coalition-name-box{border:1px solid var(--line); background:var(--card-alt); border-radius:var(--r-md); padding:14px 16px; margin-bottom:16px;}
   .coalition-name-box label{display:block; font-size:12.5px; font-weight:800; color:var(--ink); margin-bottom:6px;}
@@ -61,7 +59,7 @@
   .session-bar{display:flex; gap:10px; margin-top:12px; flex-wrap:wrap; align-items:center;}
   .session-chip{font-family:'Space Mono',monospace; font-size:11.5px; font-weight:700; padding:6px 12px; border-radius:999px; background:var(--card-alt); border:1px solid var(--line); color:var(--ink-soft);}
 
-  .recap-bar{position:sticky; top:8px; z-index:40; display:flex; gap:6px; flex-wrap:wrap; background:var(--card); border:1px solid var(--line); border-radius:999px; padding:8px 12px; margin-bottom:14px; box-shadow:var(--shadow-sm); justify-content:center;}
+  .recap-bar{display:flex; gap:6px; flex-wrap:wrap; background:var(--card); border:1px solid var(--line); border-radius:999px; padding:8px 12px; margin-bottom:14px; box-shadow:var(--shadow-sm); justify-content:center;}
   .recap-chip{display:flex; align-items:center; gap:5px; font-family:'Space Mono',monospace; font-size:11px; font-weight:700; color:var(--ink); background:var(--card-alt); border-radius:999px; padding:4px 9px;}
   .recap-chip.empty{opacity:.4;}
 
@@ -93,6 +91,7 @@
   .switch input:checked + .switch-slider::before{transform:translateX(17px);}
   .stats-pref-label{font-size:13.5px; font-weight:700; color:var(--ink);}
   .stats-pref-sub{font-size:11.5px; color:var(--ink-soft);}
+  .stats-pref.disabled{opacity:.45; pointer-events:none;}
 
   .slots{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px; margin-bottom:20px;}
   .slot{border:1.5px solid var(--line); background:var(--card-alt); border-radius:var(--r-md); padding:14px 14px 12px; min-height:112px; position:relative; cursor:pointer; transition:border-color .15s, transform .1s, box-shadow .15s;}
@@ -106,13 +105,13 @@
   .slot-value{font-family:'Space Mono',monospace; font-size:19px; color:var(--teal-dark); margin-top:2px; font-weight:700;}
   .lockbadge{position:absolute; top:10px; right:10px; font-size:10px; font-weight:800; letter-spacing:.03em; color:var(--teal-dark); background:var(--teal-tint); border-radius:999px; padding:2px 8px;}
 
-  .incoming{border:2px dashed var(--gold); border-radius:var(--r-md); background:var(--incoming-bg); padding:16px; margin-bottom:16px;}
-  .incoming-top{display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap;}
-  .incoming-label{font-size:11px; font-weight:800; letter-spacing:.08em; color:var(--incoming-label); text-transform:uppercase;}
-  .incoming-name{font-family:'Fredoka',sans-serif; font-weight:700; font-size:26px; color:var(--ink); margin:2px 0 10px;}
-  .incoming-stats{display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:8px;}
-  .ichip{border-radius:var(--r-sm); padding:7px 10px; font-family:'Space Mono',monospace; font-size:11px; color:var(--ink);}
-  .ichip b{display:block; font-size:14px; margin-top:1px;}
+  .incoming{border:2px dashed var(--gold); border-radius:var(--r-md); background:var(--incoming-bg); padding:10px 14px; margin-bottom:16px; position:sticky; top:8px; z-index:40; box-shadow:var(--shadow);}
+  .incoming-top{display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;}
+  .incoming-label{font-size:9.5px; font-weight:800; letter-spacing:.08em; color:var(--incoming-label); text-transform:uppercase;}
+  .incoming-name{font-family:'Fredoka',sans-serif; font-weight:700; font-size:19px; color:var(--ink); margin:1px 0 6px;}
+  .incoming-stats{display:flex; flex-wrap:wrap; gap:5px;}
+  .ichip{border-radius:999px; padding:3px 9px; font-family:'Space Mono',monospace; font-size:10px; color:var(--ink); display:flex; align-items:center; gap:5px; white-space:nowrap;}
+  .ichip b{font-size:10.5px;}
   .stats-hidden-msg{font-size:13px; color:var(--ink-soft); font-style:italic; padding:8px 0 2px;}
   #rerollBtn{white-space:nowrap;}
 
@@ -186,6 +185,11 @@
   .clash-vals{display:flex; justify-content:space-between; font-family:'Space Mono',monospace; font-size:10.5px; color:var(--ink-soft); margin-top:3px;}
 
   .hs-inline{margin-top:6px;}
+  .share-box{border:1.5px dashed var(--teal); background:var(--teal-tint); border-radius:var(--r-md); padding:14px 16px; margin-bottom:16px;}
+  .share-title{font-family:'Fredoka',sans-serif; font-weight:600; font-size:15px; margin-bottom:8px; color:var(--ink);}
+  .share-textarea{width:100%; font-family:'Space Mono',monospace; font-size:12px; color:var(--ink); background:var(--card); border:1px solid var(--line); border-radius:var(--r-sm); padding:10px; resize:none; margin-bottom:10px;}
+  .btn-danger{background:var(--card); color:var(--coral-dark); border:2px solid var(--coral);}
+  .btn-danger:hover{background:var(--coral-tint);}
 
   .modal-backdrop{position:fixed; inset:0; background:rgba(0,0,0,0.55); backdrop-filter:blur(2px); display:flex; align-items:center; justify-content:center; z-index:200; padding:20px;}
   .modal-card{background:var(--card); border-radius:var(--r-lg); padding:24px; max-width:480px; width:100%; box-shadow:var(--shadow); max-height:85vh; overflow:auto;}
@@ -216,7 +220,6 @@
 </style>
 </head>
 <body>
-<button class="fab-help" onclick="openTutorial()" title="How to Play">?</button>
 <div class="wrap">
 
   <div class="letterhead">
@@ -224,13 +227,14 @@
       <div>
         <div class="lh-eyebrow">A Geography Strategy Game</div>
         <div class="lh-title">Geo Draft</div>
-        <div class="lh-sub">Draft a scrappy coalition from scattered nations, spin for a battlefield, and see if your mismatched grid can out-muscle the local powers.</div>
+        <div class="lh-sub">Draft a scrappy country out of other nations' stats, spin for a battlefield, and see if your mismatched grid can out-muscle the local powers.</div>
       </div>
       <div class="seal">🌐</div>
     </div>
     <div class="header-actions">
       <button class="icon-btn" id="themeToggle" onclick="toggleTheme()">☀️ Light</button>
       <button class="icon-btn" id="soundToggle" onclick="toggleSound()">🔊 Sound</button>
+      <button class="icon-btn" onclick="openTutorial()">❓ How to Play</button>
       <button class="icon-btn" onclick="openHighScores()">🏆 High Scores</button>
     </div>
     <div class="phase-track" id="phaseTrack">
@@ -251,40 +255,55 @@
   <!-- PHASE 0: BRIEFING -->
   <div class="panel" id="panel-brief">
     <h2>Mission Briefing</h2>
-    <p class="desc">
+    <p class="desc" id="briefDescBuild">
       Eight category slots sit open on your grid: Population, Land Mass, Military Budget, Coastline, GDP, Airports,
       Internet Access, and Renewable Energy. Nations get pulled from the global pool one at a time — you decide which
-      open slot each one fills before it locks for good.
+      open slot each one fills before it locks for good. Once it's full, name your country and spin the reel for a
+      real-world battlefield.
     </p>
-    <p class="desc">
-      Once your grid is full, spin the region reel for a real-world battlefield. Three native rival nations rise to
-      defend it, each boosted by Home Field Advantage. Pick your difficulty below, then begin.
+    <p class="desc" id="briefDescBecome" style="display:none;">
+      You'll still draft your 8-stat grid the same way. The difference comes after: instead of naming your country and
+      spinning for a random region, you'll spin a reel that lands on a real country — you take on its name and its
+      real-world neighbors become your rivals.
     </p>
 
-    <div class="diff-select" id="diffSelect">
-      <div class="diff-opt active" data-d="easy">
-        <div class="diff-name">Easy</div>
-        <div class="diff-desc">3 rerolls · all stats visible while drafting</div>
+    <div class="diff-select" id="modeSelect">
+      <div class="diff-opt active" data-m="build">
+        <div class="diff-name">🛠️ Build My Own</div>
+        <div class="diff-desc">Draft stats from different nations into a custom country</div>
       </div>
-      <div class="diff-opt" data-d="medium">
-        <div class="diff-name">Medium</div>
-        <div class="diff-desc">1 reroll · all stats visible while drafting</div>
-      </div>
-      <div class="diff-opt" data-d="hard">
-        <div class="diff-name">Hard</div>
-        <div class="diff-desc">No rerolls · stats hidden — draft blind</div>
+      <div class="diff-opt" data-m="become">
+        <div class="diff-name">🎲 Become a Country</div>
+        <div class="diff-desc">Skip the draft — spin to become a real nation and fight your neighbors</div>
       </div>
     </div>
 
-    <div class="stats-pref">
-      <label class="switch"><input type="checkbox" id="statsPrefToggle" checked><span class="switch-slider"></span></label>
-      <div>
-        <div class="stats-pref-label">Show country stats while drafting</div>
-        <div class="stats-pref-sub">Auto-set by difficulty above — flip it yourself if you want to override.</div>
+    <div id="buildModeOptions">
+      <div class="diff-select" id="diffSelect">
+        <div class="diff-opt active" data-d="easy">
+          <div class="diff-name">Easy</div>
+          <div class="diff-desc">3 rerolls · all stats visible while drafting</div>
+        </div>
+        <div class="diff-opt" data-d="medium">
+          <div class="diff-name">Medium</div>
+          <div class="diff-desc">1 reroll · all stats visible while drafting</div>
+        </div>
+        <div class="diff-opt" data-d="hard">
+          <div class="diff-name">Hard</div>
+          <div class="diff-desc">No rerolls · stats hidden — draft blind</div>
+        </div>
+      </div>
+
+      <div class="stats-pref" id="statsPrefBox">
+        <label class="switch"><input type="checkbox" id="statsPrefToggle" checked><span class="switch-slider"></span></label>
+        <div>
+          <div class="stats-pref-label">Show country stats while drafting</div>
+          <div class="stats-pref-sub">Auto-set by difficulty above — flip it yourself if you want to override.</div>
+        </div>
       </div>
     </div>
 
-    <button class="btn primary" onclick="startDraft()">Begin Draft →</button>
+    <button class="btn primary" id="beginBtn" onclick="beginGame()">Begin Draft →</button>
   </div>
 
   <!-- PHASE 1: DRAFT -->
@@ -298,11 +317,11 @@
 
   <!-- PHASE 2: REGION REEL -->
   <div class="panel hidden" id="panel-wheel">
-    <h2>Region Reel</h2>
-    <p class="desc">Spin to determine the sub-region where your coalition makes its stand.</p>
-    <div class="coalition-name-box">
-      <label for="coalitionNameInput">Name Your Coalition</label>
-      <input type="text" id="coalitionNameInput" placeholder="e.g. The Iron Alliance" maxlength="30">
+    <h2 id="wheelHeading">Region Reel</h2>
+    <p class="desc" id="wheelDesc">Spin to determine the sub-region where your country makes its stand.</p>
+    <div class="coalition-name-box" id="coalitionNameBox">
+      <label for="coalitionNameInput">Name Your Country</label>
+      <input type="text" id="coalitionNameInput" placeholder="e.g. The Republic of Draftania" maxlength="30">
     </div>
     <div class="reel-area">
       <div class="reel-outer">
@@ -329,6 +348,9 @@
     <button class="btn ghost hidden" id="playAgainBtn" onclick="location.reload()">Run New Campaign</button>
   </div>
 
+  <div class="hidden" id="restartBtnWrap" style="text-align:center; margin-top:20px;">
+    <button class="btn btn-danger small" onclick="confirmRestart()">🔄 Restart Run</button>
+  </div>
   <footer>Geo Draft v1.0 · <a onclick="openChangelog()">Changelog</a><br>All figures are rough, rounded, game-balanced approximations — not a geopolitical or military reference.</footer>
 </div>
 
@@ -364,7 +386,6 @@
         <li>Easy / Medium / Hard difficulty with rerolls and blind-draft stat hiding</li>
         <li>Region Reel spinner across 19 real-world sub-regions</li>
         <li>Campaign simulation with Home Field Advantage and a narrated, explained battle log</li>
-        <li>Theater map visualization with coalition and rival pins</li>
         <li>Category-by-category clash bars and an overall power meter</li>
         <li>Light and dark mode (dark by default)</li>
         <li>Sound effects, victory confetti, and defeat shake</li>
@@ -536,14 +557,43 @@ function sfxRoundLose(){ beep(230,0.13,'sawtooth',0.08); }
 function sfxWin(){ [523,659,784,1046].forEach((f,i)=>beep(f,0.28,'triangle',0.14,i*0.13)); }
 function sfxLose(){ [400,340,260].forEach((f,i)=>beep(f,0.32,'sawtooth',0.11,i*0.15)); }
 
+/* ============ GAME MODE ============ */
+let gameMode = 'build';
+document.querySelectorAll('#modeSelect .diff-opt').forEach(opt=>{
+  opt.addEventListener('click', ()=>{
+    document.querySelectorAll('#modeSelect .diff-opt').forEach(o=>o.classList.remove('active'));
+    opt.classList.add('active');
+    gameMode = opt.dataset.m;
+    if(gameMode === 'become'){
+      document.getElementById('briefDescBuild').style.display = 'none';
+      document.getElementById('briefDescBecome').style.display = '';
+    } else {
+      document.getElementById('briefDescBuild').style.display = '';
+      document.getElementById('briefDescBecome').style.display = 'none';
+    }
+    sfxClick();
+  });
+});
+function beginGame(){ startDraft(); }
+
 /* ============ DIFFICULTY ============ */
 let difficulty = 'easy';
-document.querySelectorAll('.diff-opt').forEach(opt=>{
+document.querySelectorAll('#diffSelect .diff-opt').forEach(opt=>{
   opt.addEventListener('click', ()=>{
-    document.querySelectorAll('.diff-opt').forEach(o=>o.classList.remove('active'));
+    document.querySelectorAll('#diffSelect .diff-opt').forEach(o=>o.classList.remove('active'));
     opt.classList.add('active');
     difficulty = opt.dataset.d;
-    document.getElementById('statsPrefToggle').checked = (difficulty !== 'hard');
+    const statsToggle = document.getElementById('statsPrefToggle');
+    const statsBox = document.getElementById('statsPrefBox');
+    if(difficulty === 'hard'){
+      statsToggle.checked = false;
+      statsToggle.disabled = true;
+      statsBox.classList.add('disabled');
+    } else {
+      statsToggle.disabled = false;
+      statsToggle.checked = true;
+      statsBox.classList.remove('disabled');
+    }
     sfxClick();
   });
 });
@@ -551,7 +601,7 @@ document.querySelectorAll('.diff-opt').forEach(opt=>{
 /* ============ STATE ============ */
 let deck = [], deckPtr = 0, grid = {};
 let rerollsMax = 3, rerollsRemaining = 3, statsVisible = true;
-let chosenRegion = null, rivals = [];
+let chosenRegion = null, chosenCountry = null, rivals = [];
 
 function shuffle(arr){
   const a=[...arr];
@@ -565,11 +615,14 @@ function setPhase(n){
     chip.classList.toggle('done', p<n);
   });
 }
+function showRestartButton(){ document.getElementById('restartBtnWrap').classList.remove('hidden'); }
 function updateSessionBar(){
   const diffNames = {easy:'Easy', medium:'Medium', hard:'Hard'};
-  document.getElementById('diffChip').textContent = 'Difficulty: ' + diffNames[difficulty];
+  const modeLabel = gameMode === 'become' ? 'Become a Country' : 'Build My Own';
+  document.getElementById('diffChip').textContent = `${modeLabel} · ${diffNames[difficulty]}`;
   document.getElementById('rerollChip').textContent = 'Rerolls: ' + rerollsRemaining + '/' + rerollsMax;
   document.getElementById('rerollChip').classList.toggle('hidden', rerollsMax===0);
+  document.getElementById('statsChip').classList.remove('hidden');
   document.getElementById('statsChip').textContent = 'Stats: ' + (statsVisible ? 'Visible' : 'Hidden');
 }
 function assignedCount(){ return Object.keys(grid).length; }
@@ -590,6 +643,7 @@ function startDraft(){
   document.getElementById('sessionBar').classList.remove('hidden');
   setPhase(1);
   sfxClick();
+  showRestartButton();
 
   rerollsMax = difficulty==='easy' ? 3 : (difficulty==='medium' ? 1 : 0);
   rerollsRemaining = rerollsMax;
@@ -616,7 +670,7 @@ function renderIncoming(){
   box.classList.remove('hidden');
   const statsHtml = statsVisible
     ? `<div class="incoming-stats">${CATEGORIES.map(cat=>`
-        <div class="ichip" style="background:${cat.color}22;">${cat.label}<b>${cat.fmt(c[cat.key])}</b></div>`).join('')}</div>`
+        <div class="ichip" style="background:${cat.color}22;"><span class="dot" style="background:${cat.color}"></span>${cat.short}: <b>${cat.fmt(c[cat.key])}</b></div>`).join('')}</div>`
     : `<div class="stats-hidden-msg">🙈 Stats hidden — assign this one blind.</div>`;
   box.innerHTML = `
     <div class="incoming-top">
@@ -670,13 +724,18 @@ function assignSlot(key){
   renderRecapBar();
 }
 
-/* ============ PHASE 2: REGION REEL ============ */
-const REEL_ROW_H = 50, REEL_REPEATS = 9;
+/* ============ PHASE 2: REGION / COUNTRY REEL ============ */
+const REEL_ROW_H = 50;
 let reelSpinning = false;
+let reelItems = [];
+let reelRepeats = 9;
+
 function buildReelList(){
+  reelItems = gameMode === 'become' ? COUNTRIES.map(c=>c.n) : REGIONS;
+  reelRepeats = reelItems.length > 30 ? 3 : 9;
   const list = document.getElementById('reelList');
   let html = '';
-  for(let r=0;r<REEL_REPEATS;r++) REGIONS.forEach(reg=>{ html += `<div class="reel-item">${reg}</div>`; });
+  for(let r=0;r<reelRepeats;r++) reelItems.forEach(label=>{ html += `<div class="reel-item">${label}</div>`; });
   list.innerHTML = html;
   list.style.transition = 'none';
   list.style.transform = 'translateY(0px)';
@@ -684,7 +743,23 @@ function buildReelList(){
 function startWheel(){
   document.getElementById('panel-draft').classList.add('hidden');
   document.getElementById('panel-wheel').classList.remove('hidden');
+  document.getElementById('wheelHeading').textContent = 'Region Reel';
+  document.getElementById('wheelDesc').textContent = 'Spin to determine the sub-region where your country makes its stand.';
+  document.getElementById('coalitionNameBox').classList.remove('hidden');
   setPhase(2);
+  buildReelList();
+}
+function startBecomeMode(){
+  document.getElementById('panel-brief').classList.add('hidden');
+  document.getElementById('panel-wheel').classList.remove('hidden');
+  document.getElementById('sessionBar').classList.remove('hidden');
+  document.getElementById('wheelHeading').textContent = 'Country Reel';
+  document.getElementById('wheelDesc').textContent = 'Spin to find out which real country you become.';
+  document.getElementById('coalitionNameBox').classList.add('hidden');
+  setPhase(2);
+  sfxClick();
+  showRestartButton();
+  updateSessionBar();
   buildReelList();
 }
 function spinReel(){
@@ -693,10 +768,17 @@ function spinReel(){
   document.getElementById('spinBtn').disabled = true;
   document.getElementById('reelResult').textContent = '';
 
-  const chosenIndex = Math.floor(Math.random()*REGIONS.length);
-  chosenRegion = REGIONS[chosenIndex];
-  const targetRepeat = 6;
-  const targetRow = targetRepeat*REGIONS.length + chosenIndex;
+  const chosenIndex = Math.floor(Math.random()*reelItems.length);
+  const chosenLabel = reelItems[chosenIndex];
+  if(gameMode === 'become'){
+    chosenCountry = COUNTRIES.find(c=>c.n===chosenLabel);
+    chosenRegion = chosenCountry.r;
+  } else {
+    chosenCountry = null;
+    chosenRegion = chosenLabel;
+  }
+  const targetRepeat = Math.max(1, Math.floor(reelRepeats/2));
+  const targetRow = targetRepeat*reelItems.length + chosenIndex;
   const offset = targetRow*REEL_ROW_H - REEL_ROW_H;
 
   const list = document.getElementById('reelList');
@@ -711,24 +793,38 @@ function spinReel(){
   }
   setTimeout(()=>{
     sfxSpinLand();
-    document.getElementById('reelResult').textContent = '📍 ' + chosenRegion;
+    document.getElementById('reelResult').textContent = '📍 ' + chosenLabel;
     document.getElementById('toCampaignBtn').classList.remove('hidden');
     reelSpinning = false;
   }, 3200);
 }
 
 /* ============ PHASE 3: CAMPAIGN ============ */
-let coalitionName = 'Unnamed Coalition';
+let coalitionName = 'Unnamed Country';
 function startCampaign(){
   document.getElementById('panel-wheel').classList.add('hidden');
   document.getElementById('panel-campaign').classList.remove('hidden');
   setPhase(3);
 
-  const nameInput = document.getElementById('coalitionNameInput').value.trim();
-  coalitionName = nameInput || 'Unnamed Coalition';
+  if(gameMode === 'become'){
+    grid = {};
+    CATEGORIES.forEach(cat=>{ grid[cat.key] = {country: chosenCountry.n, value: chosenCountry[cat.key]}; });
+    coalitionName = chosenCountry.n;
 
-  const pool = COUNTRIES.filter(c=>c.r===chosenRegion);
-  rivals = shuffle(pool).slice(0,3);
+    let pool = shuffle(COUNTRIES.filter(c=>c.r===chosenRegion && c.n!==chosenCountry.n));
+    let rivalsList = pool.slice(0,3);
+    if(rivalsList.length < 3){
+      const used = new Set([chosenCountry.n, ...rivalsList.map(r=>r.n)]);
+      const backfill = shuffle(COUNTRIES.filter(c=>!used.has(c.n)));
+      while(rivalsList.length < 3 && backfill.length) rivalsList.push(backfill.pop());
+    }
+    rivals = rivalsList;
+  } else {
+    const nameInput = document.getElementById('coalitionNameInput').value.trim();
+    coalitionName = nameInput || 'Unnamed Country';
+    const pool = COUNTRIES.filter(c=>c.r===chosenRegion);
+    rivals = shuffle(pool).slice(0,3);
+  }
 
   document.getElementById('campaignDesc').textContent =
     `${coalitionName} deploys to the ${chosenRegion} theater. Three native powers rise to defend home ground, each running +${Math.round((HFA_MULT-1)*100)}% Home Field Advantage.`;
@@ -742,9 +838,7 @@ function renderRivalCards(){
   rivals.forEach(rv=>{
     const div = document.createElement('div');
     div.className = 'rival-card';
-    const statsHtml = statsVisible
-      ? `<div class="rival-stats">${CATEGORIES.map(cat=>`<div><span>${cat.label}</span><b>${cat.fmt(rv[cat.key]*HFA_MULT)}</b></div>`).join('')}</div>`
-      : `<div class="stats-hidden-msg">🙈 Stats hidden</div>`;
+    const statsHtml = `<div class="rival-stats">${CATEGORIES.map(cat=>`<div><span>${cat.label}</span><b>${cat.fmt(rv[cat.key]*HFA_MULT)}</b></div>`).join('')}</div>`;
     div.innerHTML = `<div class="rival-tag">Home Field +${Math.round((HFA_MULT-1)*100)}%</div><div class="rival-name">${rv.n}</div>${statsHtml}`;
     box.appendChild(div);
   });
@@ -839,8 +933,8 @@ function renderHighScoresModal(){
     <div class="hs-row">
       <div class="hs-rank">#${i+1}</div>
       <div>
-        <div class="hs-score">${s.score} pts <span class="hs-badge ${s.win?'win':'loss'}">${s.win?'WIN':'LOSS'}</span></div>
-        <div class="hs-meta">${s.region} · ${s.difficulty} · ${s.date}</div>
+        <div class="hs-score">${s.name || 'Unnamed Country'} <span class="hs-badge ${s.win?'win':'loss'}">${s.win?'WIN':'LOSS'}</span></div>
+        <div class="hs-meta">${s.score} pts · ${s.region} · ${s.difficulty} · ${s.date}</div>
       </div>
     </div>`).join('');
 }
@@ -848,6 +942,29 @@ function openHighScores(){ renderHighScoresModal(); document.getElementById('hsB
 function closeModal(id){ document.getElementById(id).classList.add('hidden'); }
 function openChangelog(){ document.getElementById('clBackdrop').classList.remove('hidden'); }
 
+function confirmRestart(){
+  if(confirm('Restart your run? This will reset your current draft, region, and campaign progress. Your high scores are safe.')){
+    location.reload();
+  }
+}
+function copyShareText(){
+  const ta = document.getElementById('shareTextarea');
+  const btn = document.getElementById('copyShareBtn');
+  const displayText = ta.value;
+  const fullText = displayText + '\n\nPlay Geo Draft on https://jackzy2048.github.io/Geo-Draft/';
+  const done = ()=>{ btn.textContent = 'Copied! ✓'; setTimeout(()=>{ btn.textContent='Copy to Clipboard'; }, 1800); };
+  const fallback = ()=>{
+    ta.value = fullText; ta.select(); 
+    try{ document.execCommand('copy'); }catch(e){}
+    ta.value = displayText;
+    done();
+  };
+  try{
+    navigator.clipboard.writeText(fullText).then(done).catch(fallback);
+  }catch(e){
+    fallback();
+  }
+}
 function animateCount(el, target, duration){
   const startTime = performance.now();
   function tick(now){
@@ -886,30 +1003,40 @@ function revealResults(playerFinal, blocFinal, playerScores, blocScoresAvg, win)
   const finalScore = Math.round(playerFinal*10) + (win?500:0);
   const scores = loadHighScores();
   const isNewBest = scores.length===0 || finalScore > scores[0].score;
-  scores.push({score:finalScore, region:chosenRegion, win, difficulty, date:new Date().toLocaleDateString()});
+  scores.push({name:coalitionName, score:finalScore, region:chosenRegion, win, difficulty, date:new Date().toLocaleDateString()});
   scores.sort((a,b)=>b.score-a.score);
   const trimmed = scores.slice(0,10);
   saveHighScores(trimmed);
 
+  const shareText = `🌐 GEO DRAFT — Campaign Report
+${coalitionName}
+${win ? '🏆 VICTORY' : '💥 DEFEAT'} in the ${chosenRegion} theater
+Score: ${finalScore} pts (margin ${margin})`;
+
   const resultArea = document.getElementById('resultArea');
   resultArea.innerHTML = `
     <div class="result-banner ${win?'win':'loss'}" id="resultBanner">
+      <div class="result-margin" style="font-weight:800; font-size:14px; color:var(--ink); margin-bottom:2px;">${coalitionName}</div>
       <div class="result-title ${win?'win':'loss'}">${win?'Victory!':'Defeat'}</div>
       <div class="result-margin">Decided by ${margin} composite points · Theater: ${chosenRegion}</div>
       <div class="score-label">Campaign Score</div>
       <div class="score-number" id="scoreNumber">0</div>
       ${isNewBest ? '<div class="new-best">🏆 New Best Score!</div>' : ''}
     </div>
-    ${renderTheaterMap()}
     <div class="clash-block">
       <div class="clash-legend">
-        <span><span class="legend-dot" style="background:var(--teal)"></span>Your Coalition</span>
+        <span><span class="legend-dot" style="background:var(--teal)"></span>${coalitionName}</span>
         <span><span class="legend-dot" style="background:var(--coral)"></span>${chosenRegion} Bloc</span>
       </div>
       ${clashRow('Overall Power', null, playerFinal, blocFinal, true)}
     </div>
     <div class="clash-block">
       ${CATEGORIES.map((c,idx)=>clashRow(c.label + ' — ' + grid[c.key].country, c.color, playerScores[idx], blocScoresAvg[idx], false)).join('')}
+    </div>
+    <div class="share-box">
+      <div class="share-title">📋 Share Your Score</div>
+      <textarea class="share-textarea" id="shareTextarea" readonly rows="6">${shareText}</textarea>
+      <button class="btn small" id="copyShareBtn" onclick="copyShareText()">Copy to Clipboard</button>
     </div>
     <div class="hs-inline" style="text-align:center;">
       <button class="btn ghost small" onclick="openHighScores()">🏆 View High Scores</button>
@@ -933,11 +1060,11 @@ function revealResults(playerFinal, blocFinal, playerScores, blocScoresAvg, win)
 
 /* ============ TUTORIAL ============ */
 const TUT_STEPS = [
-  {emoji:'🌐', title:'Welcome to Geo Draft!', body:"Build a scrappy coalition of nations, then send them to war against the local power players of a real-world region. Here's the loop in under a minute."},
+  {emoji:'🌐', title:'Welcome to Geo Draft!', body:"Build a custom country out of other nations' real stats, then send it to war against the local power players of a real-world region. Here's the loop in under a minute."},
   {emoji:'🗂️', title:'1. Draft Grid', body:"Eight stat categories sit open — Population, Land Mass, Military Budget, Coastline, GDP, Airports, Internet Access, Renewable Energy. Nations appear one at a time; you choose which open category each one fills. You don't pick the nation, only where it goes — choose wisely."},
   {emoji:'🎡', title:'2. Region Reel', body:"Once your grid is locked, spin the reel to land on a real sub-region of the world — that's your battlefield."},
-  {emoji:'⚔️', title:'3. Campaign', body:"Three nations native to that region rise to defend it, boosted by Home Field Advantage. Your coalition's stats clash against theirs, category by category, to decide the winner."},
-  {emoji:'🏆', title:'Score & Compete', body:"Every run earns a score based on how dominant your coalition was. Chase a new personal best across runs — good luck out there!"}
+  {emoji:'⚔️', title:'3. Campaign', body:"Three nations native to that region rise to defend it, boosted by Home Field Advantage. Your country's stats clash against theirs, category by category, to decide the winner."},
+  {emoji:'🏆', title:'Score & Compete', body:"Every run earns a score based on how dominant your country was. Chase a new personal best across runs — good luck out there!"}
 ];
 let tutStep = 0;
 function renderTutorial(){
@@ -957,12 +1084,6 @@ function tutorialNext(){
   tutStep++; renderTutorial();
 }
 function tutorialPrev(){ if(tutStep>0){ tutStep--; renderTutorial(); } }
-
-(function autoTutorial(){
-  let seen = false;
-  try{ seen = localStorage.getItem('geoDraftTutorialSeen')==='1'; }catch(e){ seen=false; }
-  if(!seen) openTutorial();
-})();
 </script>
 </body>
 </html>
