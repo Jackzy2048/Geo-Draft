@@ -207,6 +207,9 @@
   .spinner{width:44px; height:44px; border:4px solid var(--line); border-top-color:var(--teal); border-radius:50%; animation:spin .8s linear infinite;}
   @keyframes spin{to{transform:rotate(360deg);}}
   .loading-text{font-family:'Fredoka',sans-serif; font-weight:600; font-size:16px; color:var(--ink-soft); text-align:center;}
+  .toast-container{position:fixed; top:70px; left:50%; transform:translateX(-50%); z-index:400; display:flex; flex-direction:column; gap:8px; align-items:center; pointer-events:none; max-width:90vw;}
+  .toast{background:var(--card); border:1.5px solid var(--gold); color:var(--ink); font-family:'Fredoka',sans-serif; font-weight:600; font-size:13.5px; padding:10px 18px; border-radius:999px; box-shadow:var(--shadow); opacity:0; transform:translateY(-10px); transition:opacity .25s, transform .25s; text-align:center;}
+  .toast.show{opacity:1; transform:translateY(0);}
   .splash{
     position:fixed; inset:0; z-index:1000; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px;
     background:linear-gradient(160deg, var(--bg1) 0%, var(--bg2) 100%); transition:opacity .5s ease, visibility .5s ease;
@@ -294,7 +297,7 @@
     <h2>Mission Briefing</h2>
     <p class="desc" id="briefDescBuild">
       Eight category slots sit open on your grid: Population, Land Mass, Military Budget, Coastline, GDP, Airports,
-      Internet Access, and Renewable Energy. Nations get pulled from the global pool one at a time — you decide which
+      Internet Speed, and Renewable Energy. Nations get pulled from the global pool one at a time — you decide which
       open slot each one fills before it locks for good. Once it's full, name your country and spin the reel for a
       real-world battlefield.
     </p>
@@ -340,6 +343,14 @@
         <div>
           <div class="stats-pref-label">Show country stats while drafting</div>
           <div class="stats-pref-sub">Auto-set by difficulty above — flip it yourself if you want to override.</div>
+        </div>
+      </div>
+
+      <div class="stats-pref">
+        <label class="switch"><input type="checkbox" id="dailyModeToggle"><span class="switch-slider"></span></label>
+        <div>
+          <div class="stats-pref-label">🗓️ Daily Challenge</div>
+          <div class="stats-pref-sub">Everyone who plays today draws the same countries and lands on the same region — a fair leaderboard, no luck involved.</div>
         </div>
       </div>
     </div>
@@ -423,11 +434,15 @@
 <div class="modal-backdrop hidden" id="glbBackdrop">
   <div class="modal-card">
     <div class="modal-head"><h3>🌍 Global Leaderboard</h3><button class="modal-x" onclick="closeModal('glbBackdrop')">✕</button></div>
-    <div class="diff-select" id="glbTabs" style="margin-bottom:14px;">
+    <div class="diff-select" id="glbTabs" style="margin-bottom:12px;">
       <div class="diff-opt active" data-gd="easy" style="padding:10px;"><div class="diff-name" style="font-size:15px;">Easy</div></div>
       <div class="diff-opt" data-gd="medium" style="padding:10px;"><div class="diff-name" style="font-size:15px;">Medium</div></div>
       <div class="diff-opt" data-gd="hard" style="padding:10px;"><div class="diff-name" style="font-size:15px;">Hard</div></div>
     </div>
+    <label class="switch-wrap" style="margin-bottom:14px;">
+      <span class="switch"><input type="checkbox" id="glbDailyToggle" onchange="toggleGlbDaily()"><span class="switch-slider"></span></span>
+      🗓️ Today's Daily Challenge only
+    </label>
     <div id="glbList"><p style="color:var(--ink-soft);">Loading...</p></div>
   </div>
 </div>
@@ -451,7 +466,7 @@
     <div class="cl-entry">
       <div class="cl-version">v0.5 (BETA)</div>
       <ul>
-        <li>8-category draft grid: Population, Land Mass, Military Budget, Coastline, GDP, Airports, Internet Access, Renewable Energy</li>
+        <li>8-category draft grid: Population, Land Mass, Military Budget, Coastline, GDP, Airports, Internet Speed, Renewable Energy</li>
         <li>Two game modes: Build My Own Country, or Become a Country (adopt a real nation's name and neighbors after drafting)</li>
         <li>Easy / Medium / Hard difficulty with rerolls and blind-draft stat hiding</li>
         <li>Region Reel spinner across 19 real-world sub-regions (or a Country Reel in Become mode)</li>
@@ -475,85 +490,85 @@
 <script>
 /* ============ DATA ============ */
 const COUNTRIES = [
-  {n:"United States",r:"North America",pop:335,area:9834,mil:916,coast:19924,gdp:27000,airports:13000,internet:91,renew:21,lat:39,lon:-98},
-  {n:"Canada",r:"North America",pop:39,area:9985,mil:27,coast:202080,gdp:2100,airports:1400,internet:93,renew:68,lat:60,lon:-95},
-  {n:"Mexico",r:"North America",pop:129,area:1964,mil:8,coast:9330,gdp:1800,airports:1700,internet:75,renew:25,lat:23,lon:-102},
-  {n:"Guatemala",r:"Central America",pop:18,area:109,mil:0.3,coast:400,gdp:100,airports:300,internet:65,renew:60,lat:15.5,lon:-90.2},
-  {n:"Panama",r:"Central America",pop:4.4,area:75,mil:0.6,coast:2490,gdp:75,airports:100,internet:70,renew:70,lat:8.5,lon:-80.8},
-  {n:"Honduras",r:"Central America",pop:10,area:112,mil:0.4,coast:820,gdp:32,airports:100,internet:43,renew:60,lat:15,lon:-86.5},
-  {n:"Costa Rica",r:"Central America",pop:5.2,area:51,mil:0.02,coast:1290,gdp:68,airports:150,internet:87,renew:98,lat:9.7,lon:-83.8},
-  {n:"Cuba",r:"Caribbean",pop:11,area:110,mil:1,coast:3735,gdp:107,airports:130,internet:70,renew:5,lat:21.5,lon:-79.5},
-  {n:"Dominican Republic",r:"Caribbean",pop:11,area:48.7,mil:0.7,coast:1288,gdp:121,airports:36,internet:82,renew:18,lat:18.7,lon:-70.2},
-  {n:"Jamaica",r:"Caribbean",pop:2.8,area:10.8,mil:0.2,coast:1022,gdp:19,airports:30,internet:65,renew:15,lat:18.1,lon:-77.3},
-  {n:"Haiti",r:"Caribbean",pop:11.5,area:27.8,mil:0.05,coast:1771,gdp:21,airports:15,internet:40,renew:35,lat:19,lon:-72.4},
-  {n:"Brazil",r:"South America",pop:216,area:8516,mil:20,coast:7491,gdp:2170,airports:4000,internet:84,renew:45,lat:-10,lon:-55},
-  {n:"Argentina",r:"South America",pop:46,area:2780,mil:3,coast:4989,gdp:640,airports:1100,internet:87,renew:13,lat:-34,lon:-64},
-  {n:"Chile",r:"South America",pop:19.6,area:756,mil:5.5,coast:6435,gdp:335,airports:480,internet:89,renew:45,lat:-35,lon:-71},
-  {n:"Peru",r:"South America",pop:34,area:1285,mil:2.7,coast:2414,gdp:270,airports:200,internet:70,renew:40,lat:-10,lon:-76},
-  {n:"Colombia",r:"South America",pop:52,area:1142,mil:10,coast:3208,gdp:365,airports:900,internet:70,renew:30,lat:4,lon:-72},
-  {n:"Germany",r:"Western Europe",pop:84,area:357,mil:66,coast:2389,gdp:4500,airports:540,internet:92,renew:46,lat:51,lon:10},
-  {n:"France",r:"Western Europe",pop:68,area:551,mil:61,coast:4853,gdp:3050,airports:460,internet:92,renew:25,lat:46,lon:2},
-  {n:"Netherlands",r:"Western Europe",pop:18,area:41.5,mil:13,coast:451,gdp:1100,airports:30,internet:96,renew:15,lat:52.3,lon:5.75},
-  {n:"Belgium",r:"Western Europe",pop:11.7,area:30.5,mil:6,coast:66,gdp:630,airports:40,internet:94,renew:22,lat:50.8,lon:4.5},
-  {n:"United Kingdom",r:"Northern Europe",pop:68,area:244,mil:68,coast:12429,gdp:3400,airports:460,internet:96,renew:42,lat:54,lon:-2},
-  {n:"Sweden",r:"Northern Europe",pop:10.5,area:450,mil:9,coast:3218,gdp:590,airports:230,internet:96,renew:68,lat:62,lon:15},
-  {n:"Norway",r:"Northern Europe",pop:5.5,area:385,mil:8.5,coast:25148,gdp:500,airports:100,internet:99,renew:98,lat:61,lon:8.5},
-  {n:"Denmark",r:"Northern Europe",pop:5.9,area:43,mil:6,coast:7314,gdp:400,airports:80,internet:98,renew:55,lat:56,lon:10},
-  {n:"Italy",r:"Southern Europe",pop:59,area:301,mil:33,coast:7600,gdp:2200,airports:130,internet:82,renew:40,lat:43,lon:12.5},
-  {n:"Spain",r:"Southern Europe",pop:47.5,area:505,mil:20,coast:4964,gdp:1580,airports:150,internet:94,renew:46,lat:40,lon:-4},
-  {n:"Greece",r:"Southern Europe",pop:10.4,area:132,mil:8,coast:13676,gdp:240,airports:80,internet:79,renew:43,lat:39,lon:22},
-  {n:"Portugal",r:"Southern Europe",pop:10.3,area:92,mil:3.5,coast:1793,gdp:280,airports:65,internet:84,renew:61,lat:39.5,lon:-8},
-  {n:"Poland",r:"Eastern Europe",pop:37,area:313,mil:32,coast:440,gdp:810,airports:130,internet:87,renew:20,lat:52,lon:19.5},
-  {n:"Ukraine",r:"Eastern Europe",pop:37,area:604,mil:65,coast:2782,gdp:180,airports:190,internet:75,renew:12,lat:49,lon:32},
-  {n:"Romania",r:"Eastern Europe",pop:19,area:238,mil:8,coast:225,gdp:350,airports:50,internet:85,renew:40,lat:46,lon:25},
-  {n:"Czechia",r:"Eastern Europe",pop:10.9,area:79,mil:5,coast:0,gdp:330,airports:90,internet:88,renew:17,lat:49.8,lon:15.5},
-  {n:"Egypt",r:"North Africa",pop:112,area:1002,mil:5.6,coast:2450,gdp:400,airports:90,internet:72,renew:12,lat:27,lon:30},
-  {n:"Algeria",r:"North Africa",pop:46,area:2382,mil:18,coast:998,gdp:240,airports:150,internet:71,renew:1,lat:28,lon:3},
-  {n:"Morocco",r:"North Africa",pop:37.8,area:447,mil:5.4,coast:1835,gdp:145,airports:60,internet:84,renew:20,lat:32,lon:-6},
-  {n:"Libya",r:"North Africa",pop:6.9,area:1760,mil:3,coast:1770,gdp:45,airports:140,internet:45,renew:1,lat:27,lon:17},
-  {n:"Nigeria",r:"West Africa",pop:228,area:924,mil:3.1,coast:853,gdp:470,airports:55,internet:55,renew:25,lat:9.1,lon:8.7},
-  {n:"Ghana",r:"West Africa",pop:34,area:239,mil:0.3,coast:539,gdp:76,airports:12,internet:68,renew:40,lat:7.9,lon:-1.0},
-  {n:"Senegal",r:"West Africa",pop:18,area:197,mil:0.5,coast:531,gdp:32,airports:20,internet:46,renew:30,lat:14.5,lon:-14.5},
-  {n:"Ivory Coast",r:"West Africa",pop:29,area:322,mil:0.6,coast:515,gdp:78,airports:30,internet:46,renew:35,lat:7.5,lon:-5.5},
-  {n:"Mali",r:"West Africa",pop:23,area:1240,mil:0.6,coast:0,gdp:20,airports:30,internet:35,renew:30,lat:17,lon:-4},
-  {n:"DR Congo",r:"Central Africa",pop:102,area:2345,mil:0.5,coast:37,gdp:68,airports:200,internet:23,renew:95,lat:-2.9,lon:23.6},
-  {n:"Cameroon",r:"Central Africa",pop:28,area:476,mil:0.4,coast:402,gdp:47,airports:25,internet:40,renew:80,lat:5.7,lon:12.7},
-  {n:"Chad",r:"Central Africa",pop:18,area:1284,mil:0.3,coast:0,gdp:12,airports:60,internet:15,renew:10,lat:15.5,lon:19},
-  {n:"Gabon",r:"Central Africa",pop:2.4,area:268,mil:0.2,coast:885,gdp:21,airports:45,internet:63,renew:60,lat:-0.8,lon:11.6},
-  {n:"Ethiopia",r:"East Africa",pop:128,area:1104,mil:0.5,coast:0,gdp:155,airports:60,internet:20,renew:92,lat:9.1,lon:40.5},
-  {n:"Kenya",r:"East Africa",pop:55,area:580,mil:1.2,coast:536,gdp:118,airports:200,internet:40,renew:90,lat:0.0,lon:37.9},
-  {n:"Tanzania",r:"East Africa",pop:67,area:947,mil:0.4,coast:1424,gdp:85,airports:130,internet:30,renew:65,lat:-6.4,lon:34.9},
-  {n:"Uganda",r:"East Africa",pop:48,area:241,mil:0.4,coast:0,gdp:50,airports:50,internet:25,renew:85,lat:1.4,lon:32.3},
+  {n:"United States",r:"North America",pop:335,area:9834,mil:916,coast:19924,gdp:27000,airports:13000,internet:280,renew:21,lat:39,lon:-98},
+  {n:"Canada",r:"North America",pop:39,area:9985,mil:27,coast:202080,gdp:2100,airports:1400,internet:280,renew:68,lat:60,lon:-95},
+  {n:"Mexico",r:"North America",pop:129,area:1964,mil:8,coast:9330,gdp:1800,airports:1700,internet:280,renew:25,lat:23,lon:-102},
+  {n:"Guatemala",r:"Central America",pop:18,area:109,mil:0.3,coast:400,gdp:100,airports:300,internet:158,renew:60,lat:15.5,lon:-90.2},
+  {n:"Panama",r:"Central America",pop:4.4,area:75,mil:0.6,coast:2490,gdp:75,airports:100,internet:280,renew:70,lat:8.5,lon:-80.8},
+  {n:"Honduras",r:"Central America",pop:10,area:112,mil:0.4,coast:820,gdp:32,airports:100,internet:89,renew:60,lat:15,lon:-86.5},
+  {n:"Costa Rica",r:"Central America",pop:5.2,area:51,mil:0.02,coast:1290,gdp:68,airports:150,internet:280,renew:98,lat:9.7,lon:-83.8},
+  {n:"Cuba",r:"Caribbean",pop:11,area:110,mil:1,coast:3735,gdp:107,airports:130,internet:268,renew:5,lat:21.5,lon:-79.5},
+  {n:"Dominican Republic",r:"Caribbean",pop:11,area:48.7,mil:0.7,coast:1288,gdp:121,airports:36,internet:280,renew:18,lat:18.7,lon:-70.2},
+  {n:"Jamaica",r:"Caribbean",pop:2.8,area:10.8,mil:0.2,coast:1022,gdp:19,airports:30,internet:190,renew:15,lat:18.1,lon:-77.3},
+  {n:"Haiti",r:"Caribbean",pop:11.5,area:27.8,mil:0.05,coast:1771,gdp:21,airports:15,internet:52,renew:35,lat:19,lon:-72.4},
+  {n:"Brazil",r:"South America",pop:216,area:8516,mil:20,coast:7491,gdp:2170,airports:4000,internet:280,renew:45,lat:-10,lon:-55},
+  {n:"Argentina",r:"South America",pop:46,area:2780,mil:3,coast:4989,gdp:640,airports:1100,internet:280,renew:13,lat:-34,lon:-64},
+  {n:"Chile",r:"South America",pop:19.6,area:756,mil:5.5,coast:6435,gdp:335,airports:480,internet:280,renew:45,lat:-35,lon:-71},
+  {n:"Peru",r:"South America",pop:34,area:1285,mil:2.7,coast:2414,gdp:270,airports:200,internet:221,renew:40,lat:-10,lon:-76},
+  {n:"Colombia",r:"South America",pop:52,area:1142,mil:10,coast:3208,gdp:365,airports:900,internet:198,renew:30,lat:4,lon:-72},
+  {n:"Germany",r:"Western Europe",pop:84,area:357,mil:66,coast:2389,gdp:4500,airports:540,internet:280,renew:46,lat:51,lon:10},
+  {n:"France",r:"Western Europe",pop:68,area:551,mil:61,coast:4853,gdp:3050,airports:460,internet:280,renew:25,lat:46,lon:2},
+  {n:"Netherlands",r:"Western Europe",pop:18,area:41.5,mil:13,coast:451,gdp:1100,airports:30,internet:280,renew:15,lat:52.3,lon:5.75},
+  {n:"Belgium",r:"Western Europe",pop:11.7,area:30.5,mil:6,coast:66,gdp:630,airports:40,internet:280,renew:22,lat:50.8,lon:4.5},
+  {n:"United Kingdom",r:"Northern Europe",pop:68,area:244,mil:68,coast:12429,gdp:3400,airports:460,internet:280,renew:42,lat:54,lon:-2},
+  {n:"Sweden",r:"Northern Europe",pop:10.5,area:450,mil:9,coast:3218,gdp:590,airports:230,internet:280,renew:68,lat:62,lon:15},
+  {n:"Norway",r:"Northern Europe",pop:5.5,area:385,mil:8.5,coast:25148,gdp:500,airports:100,internet:280,renew:98,lat:61,lon:8.5},
+  {n:"Denmark",r:"Northern Europe",pop:5.9,area:43,mil:6,coast:7314,gdp:400,airports:80,internet:280,renew:55,lat:56,lon:10},
+  {n:"Italy",r:"Southern Europe",pop:59,area:301,mil:33,coast:7600,gdp:2200,airports:130,internet:280,renew:40,lat:43,lon:12.5},
+  {n:"Spain",r:"Southern Europe",pop:47.5,area:505,mil:20,coast:4964,gdp:1580,airports:150,internet:280,renew:46,lat:40,lon:-4},
+  {n:"Greece",r:"Southern Europe",pop:10.4,area:132,mil:8,coast:13676,gdp:240,airports:80,internet:280,renew:43,lat:39,lon:22},
+  {n:"Portugal",r:"Southern Europe",pop:10.3,area:92,mil:3.5,coast:1793,gdp:280,airports:65,internet:280,renew:61,lat:39.5,lon:-8},
+  {n:"Poland",r:"Eastern Europe",pop:37,area:313,mil:32,coast:440,gdp:810,airports:130,internet:280,renew:20,lat:52,lon:19.5},
+  {n:"Ukraine",r:"Eastern Europe",pop:37,area:604,mil:65,coast:2782,gdp:180,airports:190,internet:143,renew:12,lat:49,lon:32},
+  {n:"Romania",r:"Eastern Europe",pop:19,area:238,mil:8,coast:225,gdp:350,airports:50,internet:280,renew:40,lat:46,lon:25},
+  {n:"Czechia",r:"Eastern Europe",pop:10.9,area:79,mil:5,coast:0,gdp:330,airports:90,internet:280,renew:17,lat:49.8,lon:15.5},
+  {n:"Egypt",r:"North Africa",pop:112,area:1002,mil:5.6,coast:2450,gdp:400,airports:90,internet:109,renew:12,lat:27,lon:30},
+  {n:"Algeria",r:"North Africa",pop:46,area:2382,mil:18,coast:998,gdp:240,airports:150,internet:151,renew:1,lat:28,lon:3},
+  {n:"Morocco",r:"North Africa",pop:37.8,area:447,mil:5.4,coast:1835,gdp:145,airports:60,internet:120,renew:20,lat:32,lon:-6},
+  {n:"Libya",r:"North Africa",pop:6.9,area:1760,mil:3,coast:1770,gdp:45,airports:140,internet:176,renew:1,lat:27,lon:17},
+  {n:"Nigeria",r:"West Africa",pop:228,area:924,mil:3.1,coast:853,gdp:470,airports:55,internet:63,renew:25,lat:9.1,lon:8.7},
+  {n:"Ghana",r:"West Africa",pop:34,area:239,mil:0.3,coast:539,gdp:76,airports:12,internet:72,renew:40,lat:7.9,lon:-1.0},
+  {n:"Senegal",r:"West Africa",pop:18,area:197,mil:0.5,coast:531,gdp:32,airports:20,internet:53,renew:30,lat:14.5,lon:-14.5},
+  {n:"Ivory Coast",r:"West Africa",pop:29,area:322,mil:0.6,coast:515,gdp:78,airports:30,internet:77,renew:35,lat:7.5,lon:-5.5},
+  {n:"Mali",r:"West Africa",pop:23,area:1240,mil:0.6,coast:0,gdp:20,airports:30,internet:25,renew:30,lat:17,lon:-4},
+  {n:"DR Congo",r:"Central Africa",pop:102,area:2345,mil:0.5,coast:37,gdp:68,airports:200,internet:16,renew:95,lat:-2.9,lon:23.6},
+  {n:"Cameroon",r:"Central Africa",pop:28,area:476,mil:0.4,coast:402,gdp:47,airports:25,internet:48,renew:80,lat:5.7,lon:12.7},
+  {n:"Chad",r:"Central Africa",pop:18,area:1284,mil:0.3,coast:0,gdp:12,airports:60,internet:13,renew:10,lat:15.5,lon:19},
+  {n:"Gabon",r:"Central Africa",pop:2.4,area:268,mil:0.2,coast:885,gdp:21,airports:45,internet:240,renew:60,lat:-0.8,lon:11.6},
+  {n:"Ethiopia",r:"East Africa",pop:128,area:1104,mil:0.5,coast:0,gdp:155,airports:60,internet:29,renew:92,lat:9.1,lon:40.5},
+  {n:"Kenya",r:"East Africa",pop:55,area:580,mil:1.2,coast:536,gdp:118,airports:200,internet:60,renew:90,lat:0.0,lon:37.9},
+  {n:"Tanzania",r:"East Africa",pop:67,area:947,mil:0.4,coast:1424,gdp:85,airports:130,internet:34,renew:65,lat:-6.4,lon:34.9},
+  {n:"Uganda",r:"East Africa",pop:48,area:241,mil:0.4,coast:0,gdp:50,airports:50,internet:26,renew:85,lat:1.4,lon:32.3},
   {n:"Somalia",r:"East Africa",pop:18,area:638,mil:0.03,coast:3025,gdp:10,airports:60,internet:8,renew:30,lat:5.2,lon:46.2},
-  {n:"South Africa",r:"Southern Africa",pop:60,area:1221,mil:3.3,coast:2798,gdp:400,airports:550,internet:72,renew:8,lat:-29,lon:24},
-  {n:"Namibia",r:"Southern Africa",pop:2.6,area:824,mil:0.5,coast:1572,gdp:13,airports:100,internet:55,renew:33,lat:-22,lon:17},
-  {n:"Zimbabwe",r:"Southern Africa",pop:16,area:391,mil:0.3,coast:0,gdp:27,airports:20,internet:35,renew:40,lat:-19,lon:30},
-  {n:"Zambia",r:"Southern Africa",pop:20,area:753,mil:0.3,coast:0,gdp:30,airports:90,internet:30,renew:84,lat:-13,lon:27.9},
-  {n:"Saudi Arabia",r:"Middle East",pop:36,area:2150,mil:75,coast:2640,gdp:1070,airports:220,internet:100,renew:1,lat:24,lon:45},
-  {n:"Iran",r:"Middle East",pop:89,area:1648,mil:10,coast:2440,gdp:460,airports:300,internet:78,renew:5,lat:32,lon:53},
-  {n:"Israel",r:"Middle East",pop:9.7,area:22,mil:24,coast:273,gdp:520,airports:50,internet:90,renew:10,lat:31,lon:35},
-  {n:"United Arab Emirates",r:"Middle East",pop:9.4,area:83.6,mil:22,coast:1318,gdp:500,airports:40,internet:100,renew:5,lat:24,lon:54},
-  {n:"Turkey",r:"Middle East",pop:85,area:785,mil:15,coast:7200,gdp:1150,airports:100,internet:83,renew:45,lat:39,lon:35},
-  {n:"Kazakhstan",r:"Central Asia",pop:20,area:2725,mil:1.5,coast:0,gdp:260,airports:90,internet:90,renew:10,lat:48,lon:68},
-  {n:"Uzbekistan",r:"Central Asia",pop:35,area:449,mil:1,coast:0,gdp:90,airports:50,internet:78,renew:12,lat:41,lon:64},
-  {n:"Turkmenistan",r:"Central Asia",pop:6.5,area:488,mil:0.2,coast:1768,gdp:55,airports:26,internet:38,renew:0,lat:39,lon:59},
-  {n:"India",r:"South Asia",pop:1428,area:3287,mil:81,coast:7000,gdp:3700,airports:480,internet:52,renew:42,lat:21,lon:78},
-  {n:"Pakistan",r:"South Asia",pop:240,area:796,mil:10,coast:1046,gdp:375,airports:150,internet:45,renew:40,lat:30,lon:70},
-  {n:"Bangladesh",r:"South Asia",pop:172,area:148,mil:4,coast:580,gdp:460,airports:20,internet:45,renew:4,lat:24,lon:90},
-  {n:"Sri Lanka",r:"South Asia",pop:22,area:65.6,mil:1.5,coast:1340,gdp:84,airports:18,internet:58,renew:40,lat:7.9,lon:80.8},
-  {n:"China",r:"East Asia",pop:1412,area:9597,mil:296,coast:14500,gdp:18500,airports:500,internet:76,renew:31,lat:35,lon:105},
-  {n:"Japan",r:"East Asia",pop:124,area:378,mil:47,coast:29751,gdp:4200,airports:175,internet:93,renew:22,lat:36,lon:138},
-  {n:"South Korea",r:"East Asia",pop:51.7,area:100,mil:46,coast:2413,gdp:1760,airports:110,internet:97,renew:9,lat:36,lon:128},
-  {n:"Mongolia",r:"East Asia",pop:3.4,area:1564,mil:0.1,coast:0,gdp:19,airports:40,internet:78,renew:20,lat:46,lon:104},
-  {n:"Indonesia",r:"Southeast Asia",pop:277,area:1905,mil:9,coast:54716,gdp:1400,airports:680,internet:79,renew:15,lat:-2,lon:118},
-  {n:"Vietnam",r:"Southeast Asia",pop:98,area:331,mil:8,coast:3444,gdp:470,airports:22,internet:79,renew:40,lat:16,lon:108},
-  {n:"Thailand",r:"Southeast Asia",pop:71,area:513,mil:5.7,coast:3219,gdp:540,airports:100,internet:88,renew:18,lat:15,lon:101},
-  {n:"Philippines",r:"Southeast Asia",pop:117,area:300,mil:4,coast:36289,gdp:460,airports:250,internet:73,renew:30,lat:13,lon:122},
-  {n:"Malaysia",r:"Southeast Asia",pop:34,area:330,mil:4.5,coast:4675,gdp:430,airports:65,internet:97,renew:25,lat:2.5,lon:112.5},
-  {n:"Australia",r:"Oceania",pop:26,area:7692,mil:32,coast:25760,gdp:1700,airports:2000,internet:96,renew:35,lat:-25,lon:134},
-  {n:"New Zealand",r:"Oceania",pop:5.2,area:268,mil:2,coast:15134,gdp:250,airports:120,internet:92,renew:82,lat:-41,lon:174},
-  {n:"Papua New Guinea",r:"Oceania",pop:10.3,area:462,mil:0.1,coast:5152,gdp:32,airports:560,internet:20,renew:60,lat:-6,lon:147},
-  {n:"Fiji",r:"Oceania",pop:0.94,area:18.3,mil:0.05,coast:1129,gdp:5.6,airports:28,internet:60,renew:45,lat:-17.7,lon:178},
+  {n:"South Africa",r:"Southern Africa",pop:60,area:1221,mil:3.3,coast:2798,gdp:400,airports:550,internet:189,renew:8,lat:-29,lon:24},
+  {n:"Namibia",r:"Southern Africa",pop:2.6,area:824,mil:0.5,coast:1572,gdp:13,airports:100,internet:140,renew:33,lat:-22,lon:17},
+  {n:"Zimbabwe",r:"Southern Africa",pop:16,area:391,mil:0.3,coast:0,gdp:27,airports:20,internet:47,renew:40,lat:-19,lon:30},
+  {n:"Zambia",r:"Southern Africa",pop:20,area:753,mil:0.3,coast:0,gdp:30,airports:90,internet:40,renew:84,lat:-13,lon:27.9},
+  {n:"Saudi Arabia",r:"Middle East",pop:36,area:2150,mil:75,coast:2640,gdp:1070,airports:220,internet:280,renew:1,lat:24,lon:45},
+  {n:"Iran",r:"Middle East",pop:89,area:1648,mil:10,coast:2440,gdp:460,airports:300,internet:152,renew:5,lat:32,lon:53},
+  {n:"Israel",r:"Middle East",pop:9.7,area:22,mil:24,coast:273,gdp:520,airports:50,internet:280,renew:10,lat:31,lon:35},
+  {n:"United Arab Emirates",r:"Middle East",pop:9.4,area:83.6,mil:22,coast:1318,gdp:500,airports:40,internet:280,renew:5,lat:24,lon:54},
+  {n:"Turkey",r:"Middle East",pop:85,area:785,mil:15,coast:7200,gdp:1150,airports:100,internet:280,renew:45,lat:39,lon:35},
+  {n:"Kazakhstan",r:"Central Asia",pop:20,area:2725,mil:1.5,coast:0,gdp:260,airports:90,internet:280,renew:10,lat:48,lon:68},
+  {n:"Uzbekistan",r:"Central Asia",pop:35,area:449,mil:1,coast:0,gdp:90,airports:50,internet:85,renew:12,lat:41,lon:64},
+  {n:"Turkmenistan",r:"Central Asia",pop:6.5,area:488,mil:0.2,coast:1768,gdp:55,airports:26,internet:224,renew:0,lat:39,lon:59},
+  {n:"India",r:"South Asia",pop:1428,area:3287,mil:81,coast:7000,gdp:3700,airports:480,internet:76,renew:42,lat:21,lon:78},
+  {n:"Pakistan",r:"South Asia",pop:240,area:796,mil:10,coast:1046,gdp:375,airports:150,internet:47,renew:40,lat:30,lon:70},
+  {n:"Bangladesh",r:"South Asia",pop:172,area:148,mil:4,coast:580,gdp:460,airports:20,internet:76,renew:4,lat:24,lon:90},
+  {n:"Sri Lanka",r:"South Asia",pop:22,area:65.6,mil:1.5,coast:1340,gdp:84,airports:18,internet:110,renew:40,lat:7.9,lon:80.8},
+  {n:"China",r:"East Asia",pop:1412,area:9597,mil:296,coast:14500,gdp:18500,airports:500,internet:280,renew:31,lat:35,lon:105},
+  {n:"Japan",r:"East Asia",pop:124,area:378,mil:47,coast:29751,gdp:4200,airports:175,internet:280,renew:22,lat:36,lon:138},
+  {n:"South Korea",r:"East Asia",pop:51.7,area:100,mil:46,coast:2413,gdp:1760,airports:110,internet:280,renew:9,lat:36,lon:128},
+  {n:"Mongolia",r:"East Asia",pop:3.4,area:1564,mil:0.1,coast:0,gdp:19,airports:40,internet:163,renew:20,lat:46,lon:104},
+  {n:"Indonesia",r:"Southeast Asia",pop:277,area:1905,mil:9,coast:54716,gdp:1400,airports:680,internet:150,renew:15,lat:-2,lon:118},
+  {n:"Vietnam",r:"Southeast Asia",pop:98,area:331,mil:8,coast:3444,gdp:470,airports:22,internet:143,renew:40,lat:16,lon:108},
+  {n:"Thailand",r:"Southeast Asia",pop:71,area:513,mil:5.7,coast:3219,gdp:540,airports:100,internet:219,renew:18,lat:15,lon:101},
+  {n:"Philippines",r:"Southeast Asia",pop:117,area:300,mil:4,coast:36289,gdp:460,airports:250,internet:118,renew:30,lat:13,lon:122},
+  {n:"Malaysia",r:"Southeast Asia",pop:34,area:330,mil:4.5,coast:4675,gdp:430,airports:65,internet:280,renew:25,lat:2.5,lon:112.5},
+  {n:"Australia",r:"Oceania",pop:26,area:7692,mil:32,coast:25760,gdp:1700,airports:2000,internet:280,renew:35,lat:-25,lon:134},
+  {n:"New Zealand",r:"Oceania",pop:5.2,area:268,mil:2,coast:15134,gdp:250,airports:120,internet:280,renew:82,lat:-41,lon:174},
+  {n:"Papua New Guinea",r:"Oceania",pop:10.3,area:462,mil:0.1,coast:5152,gdp:32,airports:560,internet:78,renew:60,lat:-6,lon:147},
+  {n:"Fiji",r:"Oceania",pop:0.94,area:18.3,mil:0.05,coast:1129,gdp:5.6,airports:28,internet:166,renew:45,lat:-17.7,lon:178},
 ];
 
 function fmtNum(v){
@@ -572,16 +587,19 @@ function formatBigUnit(value, smallUnit, bigUnit, threshold){
 
 const CATEGORIES = [
   {key:"pop",      label:"Population",       short:"Pop",   color:"#4C8DFF", fmt:v=>formatBigUnit(v,"M","B",1000)},
-  {key:"area",     label:"Land Mass",        short:"Land",  color:"#3FA65A", fmt:v=>fmtNum(v)+"k km²"},
+  {key:"area",     label:"Land Mass",        short:"Land",  color:"#3FA65A", fmt:v=>formatBigUnit(v,"k km²","M km²",1000)},
   {key:"mil",      label:"Military Budget",  short:"Mil",   color:"#F0704B", fmt:v=>"$"+fmtNum(v)+"B"},
   {key:"coast",    label:"Coastline",        short:"Coast", color:"#2EC4C6", fmt:v=>fmtNum(v)+" km"},
   {key:"gdp",      label:"GDP",              short:"GDP",   color:"#F0B429", fmt:v=>"$"+formatBigUnit(v,"B","T",1000)},
   {key:"airports", label:"Airports",         short:"Air",   color:"#9B6BF2", fmt:v=>fmtNum(v)},
-  {key:"internet", label:"Internet Access",  short:"Net",   color:"#29B6D8", fmt:v=>fmtNum(v)+"%"},
+  {key:"internet", label:"Internet Speed",  short:"Net",   color:"#29B6D8", fmt:v=>fmtNum(v)+" Mbps"},
   {key:"renew",    label:"Renewable Energy", short:"Renew", color:"#7BC96F", fmt:v=>fmtNum(v)+"%"},
 ];
 
-const HFA_MULT = 1.25;
+const BASE_HFA_MULT = 1.25;   // fallback used only if dynamic calc can't run
+const REGION_HFA_MIN = 1.05;  // floor: even the strongest regions keep a token home boost
+const REGION_HFA_MAX = 1.65;  // ceiling: even the weakest regions can't go infinite
+const REGION_HFA_TARGET = 62; // the post-boost average power we're aiming every region toward
 const CAT_MAX = {};
 CATEGORIES.forEach(c=>{ CAT_MAX[c.key] = Math.max(...COUNTRIES.map(x=>x[c.key])); });
 function scoreOf(key, value){
@@ -589,6 +607,27 @@ function scoreOf(key, value){
   const s = (Math.log10(value+1) / Math.log10(max+1)) * 100;
   return Math.max(0, Math.min(100, s));
 }
+function regionAvgPower(members, mult){
+  const powers = members.map(c=>{
+    const scores = CATEGORIES.map(cat=>scoreOf(cat.key, c[cat.key]*mult));
+    return scores.reduce((a,b)=>a+b,0)/scores.length;
+  });
+  return powers.reduce((a,b)=>a+b,0)/powers.length;
+}
+// Binary-searches a per-region HFA multiplier so a region's average post-boost
+// power lands near REGION_HFA_TARGET — weak regions (e.g. Central Asia) end up
+// getting boosted harder than already-strong ones (e.g. North America), so which
+// region the reel lands on matters less than how well you actually drafted.
+function computeRegionHFA(members){
+  if(!members || !members.length) return BASE_HFA_MULT;
+  let lo = 1.0, hi = 3.0;
+  for(let i=0;i<24;i++){
+    const mid = (lo+hi)/2;
+    if(regionAvgPower(members, mid) < REGION_HFA_TARGET) lo = mid; else hi = mid;
+  }
+  return Math.max(REGION_HFA_MIN, Math.min(REGION_HFA_MAX, (lo+hi)/2));
+}
+let currentHFA = BASE_HFA_MULT;
 const REGIONS = [...new Set(COUNTRIES.map(c=>c.r))];
 
 /* ============ THEME ============ */
@@ -698,9 +737,35 @@ let deck = [], deckPtr = 0, grid = {};
 let rerollsMax = 3, rerollsRemaining = 3, statsVisible = true;
 let chosenRegion = null, chosenCountry = null, rivals = [];
 
+/* ============ RNG (supports Daily Challenge seeding) ============ */
+function mulberry32(seed){
+  let a = seed >>> 0;
+  return function(){
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function hashSeed(str){
+  let h = 1779033703 ^ str.length;
+  for(let i=0;i<str.length;i++){
+    h = Math.imul(h ^ str.charCodeAt(i), 3432918353);
+    h = (h << 13) | (h >>> 19);
+  }
+  return h >>> 0;
+}
+function todaysSeedString(){
+  const d = new Date();
+  return `geodraft-${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
+}
+let rng = Math.random;
+let dailyMode = false;
+let dailySeedUsed = null;
+
 function shuffle(arr){
   const a=[...arr];
-  for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+  for(let i=a.length-1;i>0;i--){ const j=Math.floor(rng()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
   return a;
 }
 function setPhase(n){
@@ -739,6 +804,15 @@ function startDraft(){
   setPhase(1);
   sfxClick();
   showRestartButton();
+
+  dailyMode = document.getElementById('dailyModeToggle') ? document.getElementById('dailyModeToggle').checked : false;
+  if(dailyMode){
+    dailySeedUsed = todaysSeedString();
+    rng = mulberry32(hashSeed(dailySeedUsed));
+  } else {
+    dailySeedUsed = null;
+    rng = Math.random;
+  }
 
   rerollsMax = difficulty==='easy' ? 3 : (difficulty==='medium' ? 1 : 0);
   rerollsRemaining = rerollsMax;
@@ -818,6 +892,36 @@ function assignSlot(key){
   renderSlots();
   renderIncoming();
   renderRecapBar();
+  checkCategoryRankToast(key, c);
+}
+function checkCategoryRankToast(key, c){
+  const cat = CATEGORIES.find(x=>x.key===key);
+  if(!cat) return;
+  const rank = COUNTRIES.filter(x=>x[key] > c[key]).length + 1;
+  if(rank > 3) return;
+  const msg = rank===1
+    ? `🏆 Great pick — ${c.n} is #1 in ${cat.label} worldwide!`
+    : `🥉 Nice — ${c.n} ranks #${rank} in ${cat.label} worldwide!`;
+  showToast(msg);
+}
+function showToast(msg){
+  let container = document.getElementById('toastContainer');
+  if(!container){
+    container = document.createElement('div');
+    container.id = 'toastContainer';
+    container.className = 'toast-container';
+    document.body.appendChild(container);
+  }
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  container.appendChild(t);
+  requestAnimationFrame(()=>t.classList.add('show'));
+  setTimeout(()=>{
+    t.classList.remove('show');
+    setTimeout(()=>t.remove(), 300);
+  }, 2600);
+  sfxRoundWin();
 }
 
 /* ============ PHASE 2: REGION / COUNTRY REEL ============ */
@@ -857,7 +961,7 @@ function spinReel(){
   document.getElementById('spinBtn').disabled = true;
   document.getElementById('reelResult').textContent = '';
 
-  const chosenIndex = Math.floor(Math.random()*reelItems.length);
+  const chosenIndex = Math.floor(rng()*reelItems.length);
   const chosenLabel = reelItems[chosenIndex];
   if(gameMode === 'become'){
     chosenCountry = COUNTRIES.find(c=>c.n===chosenLabel);
@@ -913,8 +1017,10 @@ function startCampaign(){
     rivals = shuffle(pool).slice(0,3);
   }
 
+  currentHFA = computeRegionHFA(COUNTRIES.filter(c=>c.r===chosenRegion));
+
   document.getElementById('campaignDesc').textContent =
-    `${coalitionName} deploys to the ${chosenRegion} theater. Three native powers rise to defend home ground, each running +${Math.round((HFA_MULT-1)*100)}% Home Field Advantage.`;
+    `${coalitionName} deploys to the ${chosenRegion} theater. Three native powers rise to defend home ground, each running +${Math.round((currentHFA-1)*100)}% Home Field Advantage.`;
 
   renderRivalCards();
   runBattleLog();
@@ -925,15 +1031,15 @@ function renderRivalCards(){
   rivals.forEach(rv=>{
     const div = document.createElement('div');
     div.className = 'rival-card';
-    const statsHtml = `<div class="rival-stats">${CATEGORIES.map(cat=>`<div><span>${cat.label}</span><b>${cat.fmt(rv[cat.key]*HFA_MULT)}</b></div>`).join('')}</div>`;
-    div.innerHTML = `<div class="rival-tag">Home Field +${Math.round((HFA_MULT-1)*100)}%</div><div class="rival-name">${rv.n}</div>${statsHtml}`;
+    const statsHtml = `<div class="rival-stats">${CATEGORIES.map(cat=>`<div><span>${cat.label}</span><b>${cat.fmt(rv[cat.key]*currentHFA)}</b></div>`).join('')}</div>`;
+    div.innerHTML = `<div class="rival-tag">Home Field +${Math.round((currentHFA-1)*100)}%</div><div class="rival-name">${rv.n}</div>${statsHtml}`;
     box.appendChild(div);
   });
 }
 function computePlayerScores(){ return CATEGORIES.map(c=>scoreOf(c.key, grid[c.key].value)); }
 function computeRivalScoresAvg(){
   return CATEGORIES.map(c=>{
-    const vals = rivals.map(rv=>scoreOf(c.key, rv[c.key]*HFA_MULT));
+    const vals = rivals.map(rv=>scoreOf(c.key, rv[c.key]*currentHFA));
     return vals.reduce((a,b)=>a+b,0)/vals.length;
   });
 }
@@ -943,8 +1049,8 @@ function runBattleLog(){
   const blocScoresAvg = computeRivalScoresAvg();
   const playerAvg = playerScores.reduce((a,b)=>a+b,0)/playerScores.length;
   const blocAvg = blocScoresAvg.reduce((a,b)=>a+b,0)/blocScoresAvg.length;
-  const playerVar = (Math.random()*14)-7;
-  const blocVar = (Math.random()*14)-7;
+  const playerVar = (rng()*14)-7;
+  const blocVar = (rng()*14)-7;
   const playerFinal = Math.max(0, Math.min(100, playerAvg + playerVar));
   const blocFinal = Math.max(0, Math.min(100, blocAvg + blocVar));
   const win = playerFinal >= blocFinal;
@@ -955,7 +1061,7 @@ function runBattleLog(){
   const lines = [
     {t:`📡 ${coalitionName} establishing link to the ${chosenRegion} theater...`, cls:'line-teal', sfx:sfxTick},
     {t:`🧮 Normalizing all 8 stat categories on a logarithmic power scale, so a billion-person nation can't just flatten a small coastline power...`, cls:'', sfx:sfxTick},
-    {t:`🏠 Applying Home Field Advantage: the ${chosenRegion} bloc gets +${Math.round((HFA_MULT-1)*100)}% to every stat for defending their own turf...`, cls:'line-coral', sfx:sfxTick},
+    {t:`🏠 Applying Home Field Advantage: the ${chosenRegion} bloc gets +${Math.round((currentHFA-1)*100)}% to every stat for defending their own turf...`, cls:'line-coral', sfx:sfxTick},
     {t:`🎲 Rolling fog-of-war variance (±7 points) — even a great grid can get unlucky on the day...`, cls:'', sfx:sfxTick},
     {t:`⚔️ Running category clashes...`, cls:'', sfx:sfxTick},
   ];
@@ -986,7 +1092,7 @@ function runBattleLog(){
       const cur = document.createElement('span');
       cur.className='cursor';
       term.appendChild(cur);
-      setTimeout(()=>revealResults(playerFinal, blocFinal, playerScores, blocScoresAvg, win), 700);
+      setTimeout(()=>revealResults(playerFinal, blocFinal, playerScores, blocScoresAvg, win, playerVar, blocVar), 700);
     }
   }
   step();
@@ -1034,6 +1140,22 @@ function openHighScores(){ renderHighScoresModal(); document.getElementById('hsB
 function closeModal(id){ document.getElementById(id).classList.add('hidden'); }
 function openChangelog(){ document.getElementById('clBackdrop').classList.remove('hidden'); }
 
+/* ---- Player identity (device-persisted, no account needed) ---- */
+let playerIdMemory = null;
+function getPlayerId(){
+  try{
+    let id = localStorage.getItem('geoDraftPlayerId');
+    if(!id){
+      id = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : ('p-' + Date.now() + '-' + Math.random().toString(16).slice(2));
+      localStorage.setItem('geoDraftPlayerId', id);
+    }
+    return id;
+  }catch(e){
+    if(!playerIdMemory) playerIdMemory = 'p-' + Date.now() + '-' + Math.random().toString(16).slice(2);
+    return playerIdMemory;
+  }
+}
+
 /* ---- Global leaderboard (Supabase) ---- */
 // To connect this to your own Supabase project, replace the two placeholders below
 // with your Project URL and anon public key (Project Settings → API in Supabase).
@@ -1047,21 +1169,37 @@ try{
 }catch(e){ sb = null; }
 
 function submitGlobalScore(rec){
-  if(!sb) return;
+  if(SUPABASE_URL === 'YOUR_SUPABASE_URL') return;
   try{
-    sb.from('leaderboard').insert({
-      name: String(rec.name).slice(0,30),
-      score: rec.score,
-      difficulty: rec.difficulty,
-      region: rec.region,
-      win: rec.win
-    }).then(({error})=>{
-      if(error) console.error('Geo Draft: leaderboard submit failed —', error.message);
+    fetch(`${SUPABASE_URL}/functions/v1/submit-score`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'apikey': SUPABASE_ANON_KEY
+      },
+      body: JSON.stringify({
+        name: String(rec.name).slice(0,30),
+        difficulty: rec.difficulty,
+        region: rec.region,
+        gridSelections: rec.gridSelections,
+        rivalNames: rec.rivalNames,
+        playerVar: rec.playerVar,
+        blocVar: rec.blocVar,
+        playerId: getPlayerId(),
+        dailySeed: rec.dailySeed || null
+      })
+    }).then(async res=>{
+      if(!res.ok){
+        const body = await res.text().catch(()=>'');
+        console.error('Geo Draft: leaderboard submit failed —', res.status, body);
+      }
     }).catch(e=>console.error('Geo Draft: leaderboard submit failed —', e));
   }catch(e){ console.error('Geo Draft: leaderboard submit failed —', e); }
 }
 
 let glbDifficulty = 'easy';
+let glbDailyOnly = false;
 document.querySelectorAll('#glbTabs .diff-opt').forEach(opt=>{
   opt.addEventListener('click', ()=>{
     document.querySelectorAll('#glbTabs .diff-opt').forEach(o=>o.classList.remove('active'));
@@ -1070,6 +1208,10 @@ document.querySelectorAll('#glbTabs .diff-opt').forEach(opt=>{
     loadGlobalLeaderboard();
   });
 });
+function toggleGlbDaily(){
+  glbDailyOnly = document.getElementById('glbDailyToggle').checked;
+  loadGlobalLeaderboard();
+}
 function openGlobalLeaderboard(){
   document.getElementById('glbBackdrop').classList.remove('hidden');
   loadGlobalLeaderboard();
@@ -1082,21 +1224,26 @@ async function loadGlobalLeaderboard(){
   }
   list.innerHTML = '<p style="color:var(--ink-soft);">Loading...</p>';
   try{
-    const {data, error} = await sb.from('leaderboard')
+    let query = sb.from('leaderboard')
       .select('*')
-      .eq('difficulty', glbDifficulty)
-      .order('score', {ascending:false})
-      .limit(20);
+      .eq('difficulty', glbDifficulty);
+    if(glbDailyOnly){
+      query = query.eq('daily_seed', todaysSeedString());
+    }
+    const {data, error} = await query.order('score', {ascending:false}).limit(20);
     if(error) throw error;
     if(!data || !data.length){
-      list.innerHTML = '<p style="color:var(--ink-soft);">No scores yet for this difficulty — be the first!</p>';
+      list.innerHTML = glbDailyOnly
+        ? '<p style="color:var(--ink-soft);">No Daily Challenge runs yet today — be the first!</p>'
+        : '<p style="color:var(--ink-soft);">No scores yet for this difficulty — be the first!</p>';
       return;
     }
+    const myId = getPlayerId();
     list.innerHTML = data.map((s,i)=>`
-      <div class="hs-row">
+      <div class="hs-row" ${s.player_id===myId ? 'style="background:var(--teal-tint); border-radius:10px; padding-left:6px;"' : ''}>
         <div class="hs-rank">#${i+1}</div>
         <div>
-          <div class="hs-score">${escapeHtml(s.name || 'Unnamed Country')} <span class="hs-badge ${s.win?'win':'loss'}">${s.win?'WIN':'LOSS'}</span></div>
+          <div class="hs-score">${escapeHtml(s.name || 'Unnamed Country')} ${s.player_id===myId ? '<span class="hs-badge win">YOU</span>' : ''} <span class="hs-badge ${s.win?'win':'loss'}">${s.win?'WIN':'LOSS'}</span></div>
           <div class="hs-meta">${s.score} pts · ${escapeHtml(s.region)}</div>
         </div>
       </div>`).join('');
@@ -1105,6 +1252,7 @@ async function loadGlobalLeaderboard(){
     list.innerHTML = `<p style="color:var(--ink-soft);">Couldn't load the leaderboard right now.</p><p style="color:var(--coral-dark); font-family:'Space Mono',monospace; font-size:11px; margin-top:6px;">${escapeHtml(msg)}</p>`;
   }
 }
+
 
 function confirmRestart(){
   document.getElementById('restartConfirmBackdrop').classList.remove('hidden');
@@ -1166,8 +1314,9 @@ function spawnConfetti(){
   }
 }
 
-function revealResults(playerFinal, blocFinal, playerScores, blocScoresAvg, win){
-  const margin = Math.abs(playerFinal - blocFinal).toFixed(1);
+function revealResults(playerFinal, blocFinal, playerScores, blocScoresAvg, win, playerVar, blocVar){
+  const marginNum = Math.abs(playerFinal - blocFinal);
+  const margin = marginNum.toFixed(1);
   const term = document.getElementById('terminal');
   const finalLine = document.createElement('div');
   finalLine.className = win ? 'line-teal' : 'line-coral';
@@ -1176,14 +1325,32 @@ function revealResults(playerFinal, blocFinal, playerScores, blocScoresAvg, win)
   term.scrollTop = term.scrollHeight;
   win ? sfxWin() : sfxLose();
 
-  const finalScore = Math.round(playerFinal*10) + (win?500:0);
+  // Score rewards raw performance (power) and how decisive the result was (margin),
+  // with only a modest flat bonus for winning — so a strong, close loss can still
+  // outscore a scrappy, narrow win. Max possible: 1000 (power) + 150 (win) + 300 (margin) = 1450.
+  const finalScore = Math.max(0, Math.round(playerFinal*10 + (win ? 150 : 0) + marginNum*3));
   const scores = loadHighScores();
   const isNewBest = scores.length===0 || finalScore > scores[0].score;
-  scores.push({name:coalitionName, score:finalScore, region:chosenRegion, win, difficulty, date:new Date().toLocaleDateString()});
+  scores.push({name:coalitionName, score:finalScore, region:chosenRegion, win, difficulty, date:new Date().toLocaleDateString(), daily: dailySeedUsed});
   scores.sort((a,b)=>b.score-a.score);
   const trimmed = scores.slice(0,10);
   saveHighScores(trimmed);
-  submitGlobalScore({name:coalitionName, score:finalScore, region:chosenRegion, win, difficulty});
+
+  // The global leaderboard never trusts this client-computed score directly — it's sent
+  // as raw inputs (which countries you drafted, who the rivals were, your variance rolls)
+  // to a server function that recomputes everything itself before storing anything.
+  const gridSelections = {};
+  CATEGORIES.forEach(c=>{ gridSelections[c.key] = grid[c.key].country; });
+  submitGlobalScore({
+    name: coalitionName,
+    difficulty,
+    region: chosenRegion,
+    gridSelections,
+    rivalNames: rivals.map(r=>r.n),
+    playerVar,
+    blocVar,
+    dailySeed: dailySeedUsed
+  });
 
   const shareText = `🌐 GEO DRAFT — Campaign Report
 ${coalitionName}
@@ -1239,7 +1406,7 @@ Score: ${finalScore} pts (margin ${margin})`;
 /* ============ TUTORIAL ============ */
 const TUT_STEPS = [
   {emoji:'🌐', title:'Welcome to Geo Draft!', body:"Build a custom country out of other nations' real stats, then send it to war against the local power players of a real-world region. Here's the loop in under a minute."},
-  {emoji:'🗂️', title:'1. Draft Grid', body:"Eight stat categories sit open — Population, Land Mass, Military Budget, Coastline, GDP, Airports, Internet Access, Renewable Energy. Nations appear one at a time; you choose which open category each one fills. You don't pick the nation, only where it goes — choose wisely."},
+  {emoji:'🗂️', title:'1. Draft Grid', body:"Eight stat categories sit open — Population, Land Mass, Military Budget, Coastline, GDP, Airports, Internet Speed, Renewable Energy. Nations appear one at a time; you choose which open category each one fills. You don't pick the nation, only where it goes — choose wisely."},
   {emoji:'🎡', title:'2. Region Reel', body:"Once your grid is locked, spin the reel to land on a real sub-region of the world — that's your battlefield."},
   {emoji:'⚔️', title:'3. Campaign', body:"Three nations native to that region rise to defend it, boosted by Home Field Advantage. Your country's stats clash against theirs, category by category, to decide the winner."},
   {emoji:'🏆', title:'Score & Compete', body:"Every run earns a score based on how dominant your country was. Chase a new personal best across runs — good luck out there!"}
