@@ -73,6 +73,12 @@
   .btn:hover{background:var(--teal-tint); transform:translateY(-1px);}
   .btn:disabled{opacity:.4; cursor:not-allowed; transform:none;}
   .btn.primary{background:var(--teal); color:#fff;}
+  .begin-btn{
+    display:block; width:100%; padding:18px 22px; font-size:19px; font-weight:800;
+    margin-top:6px; box-shadow:0 6px 22px rgba(40,151,127,0.35);
+    letter-spacing:.02em; border-width:0;
+  }
+  .begin-btn:hover{transform:translateY(-2px); box-shadow:0 8px 26px rgba(40,151,127,0.45); background:var(--teal-dark);}
   .btn.primary:hover{background:var(--teal-dark);}
   .btn.ghost{border-color:var(--line); color:var(--ink-soft); background:transparent;}
   .btn.small{padding:7px 14px; font-size:12.5px;}
@@ -84,6 +90,7 @@
   .diff-opt{border:2px solid var(--line); background:var(--card-alt); border-radius:var(--r-md); padding:14px 16px; cursor:pointer; transition:border-color .15s, transform .1s;}
   .diff-opt:hover{transform:translateY(-2px);}
   .diff-opt.active{border-color:var(--teal); background:var(--teal-tint);}
+  .diff-opt.disabled{opacity:.45; cursor:not-allowed; pointer-events:none;}
   .diff-name{font-family:'Fredoka',sans-serif; font-weight:600; font-size:18px; color:var(--ink);}
   .diff-desc{font-size:12.5px; color:var(--ink-soft); margin-top:4px; line-height:1.5;}
 
@@ -306,6 +313,17 @@
       spinning for a random region, you'll spin a reel that lands on a real country — you take on its name and its
       real-world neighbors become your rivals.
     </p>
+    <p class="desc" id="briefDescDaily" style="display:none;">
+      One shot a day. Everyone playing today draws from the same shuffled deck and becomes the same country, so
+      it's rivals-for-rivals the same fight for everybody — no region luck, no easier draw. Locked to Hard difficulty
+      with stats hidden so it's a fair, skill-only leaderboard.
+    </p>
+
+    <div class="section-label">Your Name</div>
+    <div class="coalition-name-box" style="margin-bottom:20px;">
+      <label for="playerUsernameInput">Shown on the global leaderboard</label>
+      <input type="text" id="playerUsernameInput" placeholder="e.g. Alex" maxlength="24">
+    </div>
 
     <div class="section-label">Choose Your Mode</div>
     <div class="diff-select mode-select-grid" id="modeSelect">
@@ -317,6 +335,10 @@
         <div class="diff-name">🎲 Become a Country</div>
         <div class="diff-desc">Same draft — but name & region get replaced by a real country and its neighbors</div>
       </div>
+      <div class="diff-opt" data-m="daily" id="dailyModeOpt">
+        <div class="diff-name">🗓️ Daily Challenge</div>
+        <div class="diff-desc" id="dailyModeDesc">Same deck, same country, same rivals as everyone else today — one attempt only</div>
+      </div>
     </div>
 
     <hr class="section-divider">
@@ -324,12 +346,8 @@
     <div id="buildModeOptions">
       <div class="section-label">Choose Your Difficulty</div>
       <div class="diff-select" id="diffSelect">
-        <div class="diff-opt active" data-d="easy">
-          <div class="diff-name">Easy</div>
-          <div class="diff-desc">3 rerolls · all stats visible while drafting</div>
-        </div>
-        <div class="diff-opt" data-d="medium">
-          <div class="diff-name">Medium</div>
+        <div class="diff-opt active" data-d="normal">
+          <div class="diff-name">Normal</div>
           <div class="diff-desc">1 reroll · all stats visible while drafting</div>
         </div>
         <div class="diff-opt" data-d="hard">
@@ -345,17 +363,13 @@
           <div class="stats-pref-sub">Auto-set by difficulty above — flip it yourself if you want to override.</div>
         </div>
       </div>
-
-      <div class="stats-pref">
-        <label class="switch"><input type="checkbox" id="dailyModeToggle"><span class="switch-slider"></span></label>
-        <div>
-          <div class="stats-pref-label">🗓️ Daily Challenge</div>
-          <div class="stats-pref-sub">Everyone who plays today draws the same countries and lands on the same region — a fair leaderboard, no luck involved.</div>
-        </div>
-      </div>
     </div>
 
-    <button class="btn primary" id="beginBtn" onclick="beginGame()">Begin Draft →</button>
+    <div id="dailyLockedNotice" class="hidden" style="text-align:center; color:var(--ink-soft); font-size:13px; margin-bottom:14px;">
+      🔒 Difficulty is locked to Hard with stats hidden for Daily Challenge — that's what keeps it fair.
+    </div>
+
+    <button class="btn primary begin-btn" id="beginBtn" onclick="beginGame()">🚀 Start Game</button>
   </div>
 
   <!-- PHASE 1: DRAFT -->
@@ -399,7 +413,7 @@
     <div class="terminal" id="terminal"></div>
     <div id="resultArea" style="margin-top:18px;"></div>
     <div style="text-align:center; margin-top:18px;">
-      <button class="btn ghost hidden" id="playAgainBtn" onclick="location.reload()">Run New Campaign</button>
+      <button class="btn ghost hidden" id="playAgainBtn" onclick="playAgain()">Run New Campaign</button>
     </div>
   </div>
 
@@ -434,15 +448,15 @@
 <div class="modal-backdrop hidden" id="glbBackdrop">
   <div class="modal-card">
     <div class="modal-head"><h3>🌍 Global Leaderboard</h3><button class="modal-x" onclick="closeModal('glbBackdrop')">✕</button></div>
+    <div class="diff-select" style="margin-bottom:12px;">
+      <div class="diff-opt active" id="glbBoardFreeplay" onclick="setGlbBoard('freeplay')" style="padding:10px;"><div class="diff-name" style="font-size:15px;">🌐 Freeplay</div></div>
+      <div class="diff-opt" id="glbBoardDaily" onclick="setGlbBoard('daily')" style="padding:10px;"><div class="diff-name" style="font-size:15px;">🗓️ Daily Challenge</div></div>
+    </div>
     <div class="diff-select" id="glbTabs" style="margin-bottom:12px;">
-      <div class="diff-opt active" data-gd="easy" style="padding:10px;"><div class="diff-name" style="font-size:15px;">Easy</div></div>
-      <div class="diff-opt" data-gd="medium" style="padding:10px;"><div class="diff-name" style="font-size:15px;">Medium</div></div>
+      <div class="diff-opt active" data-gd="normal" style="padding:10px;"><div class="diff-name" style="font-size:15px;">Normal</div></div>
       <div class="diff-opt" data-gd="hard" style="padding:10px;"><div class="diff-name" style="font-size:15px;">Hard</div></div>
     </div>
-    <label class="switch-wrap" style="margin-bottom:14px;">
-      <span class="switch"><input type="checkbox" id="glbDailyToggle" onchange="toggleGlbDaily()"><span class="switch-slider"></span></span>
-      🗓️ Today's Daily Challenge only
-    </label>
+    <div id="glbDailyHeading" class="hidden" style="text-align:center; color:var(--ink-soft); font-size:12.5px; margin-bottom:12px;">Today's Daily Challenge — Hard difficulty, one attempt each, everyone facing the same country and rivals.</div>
     <div id="glbList"><p style="color:var(--ink-soft);">Loading...</p></div>
   </div>
 </div>
@@ -691,27 +705,73 @@ function sfxRoundLose(){ beep(230,0.13,'sawtooth',0.08); }
 function sfxWin(){ [523,659,784,1046].forEach((f,i)=>beep(f,0.28,'triangle',0.14,i*0.13)); }
 function sfxLose(){ [400,340,260].forEach((f,i)=>beep(f,0.32,'sawtooth',0.11,i*0.15)); }
 
+/* ============ PLAYER USERNAME ============ */
+function getPlayerUsername(){
+  try{ return localStorage.getItem('geoDraftUsername') || ''; }catch(e){ return ''; }
+}
+function savePlayerUsername(name){
+  try{ localStorage.setItem('geoDraftUsername', name); }catch(e){}
+}
+
+/* ============ DAILY CHALLENGE GATING ============ */
+function hasDoneDailyToday(){
+  try{ return localStorage.getItem('geoDraftDailyDate') === todaysSeedString(); }catch(e){ return false; }
+}
+function markDailyDoneToday(){
+  try{ localStorage.setItem('geoDraftDailyDate', todaysSeedString()); }catch(e){}
+}
+function refreshDailyCardState(){
+  const opt = document.getElementById('dailyModeOpt');
+  const desc = document.getElementById('dailyModeDesc');
+  if(!opt) return;
+  if(hasDoneDailyToday()){
+    opt.classList.add('disabled');
+    if(gameMode === 'daily'){
+      // fall back to Build mode if they land here after already using today's attempt
+      document.querySelector('#modeSelect .diff-opt[data-m="build"]').click();
+    }
+    if(desc) desc.textContent = "✅ Already played today — come back tomorrow for a new country";
+  } else {
+    opt.classList.remove('disabled');
+    if(desc) desc.textContent = "Same deck, same country, same rivals as everyone else today — one attempt only";
+  }
+}
+
 /* ============ GAME MODE ============ */
 let gameMode = 'build';
+function isBecomeLike(){ return gameMode === 'become' || gameMode === 'daily'; }
 document.querySelectorAll('#modeSelect .diff-opt').forEach(opt=>{
   opt.addEventListener('click', ()=>{
+    if(opt.dataset.m === 'daily' && hasDoneDailyToday()) return;
     document.querySelectorAll('#modeSelect .diff-opt').forEach(o=>o.classList.remove('active'));
     opt.classList.add('active');
     gameMode = opt.dataset.m;
-    if(gameMode === 'become'){
-      document.getElementById('briefDescBuild').style.display = 'none';
-      document.getElementById('briefDescBecome').style.display = '';
+
+    document.getElementById('briefDescBuild').style.display = gameMode==='build' ? '' : 'none';
+    document.getElementById('briefDescBecome').style.display = gameMode==='become' ? '' : 'none';
+    document.getElementById('briefDescDaily').style.display = gameMode==='daily' ? '' : 'none';
+
+    const buildOpts = document.getElementById('buildModeOptions');
+    const dailyNotice = document.getElementById('dailyLockedNotice');
+    if(gameMode === 'daily'){
+      buildOpts.classList.add('hidden');
+      dailyNotice.classList.remove('hidden');
     } else {
-      document.getElementById('briefDescBuild').style.display = '';
-      document.getElementById('briefDescBecome').style.display = 'none';
+      buildOpts.classList.remove('hidden');
+      dailyNotice.classList.add('hidden');
     }
     sfxClick();
   });
 });
-function beginGame(){ startDraft(); }
+function beginGame(){
+  const nameInput = document.getElementById('playerUsernameInput');
+  const uname = nameInput.value.trim();
+  if(uname) savePlayerUsername(uname);
+  startDraft();
+}
 
 /* ============ DIFFICULTY ============ */
-let difficulty = 'easy';
+let difficulty = 'normal';
 document.querySelectorAll('#diffSelect .diff-opt').forEach(opt=>{
   opt.addEventListener('click', ()=>{
     document.querySelectorAll('#diffSelect .diff-opt').forEach(o=>o.classList.remove('active'));
@@ -777,9 +837,9 @@ function setPhase(n){
 }
 function showRestartButton(){ document.getElementById('restartBtnWrap').classList.remove('hidden'); }
 function updateSessionBar(){
-  const diffNames = {easy:'Easy', medium:'Medium', hard:'Hard'};
-  const modeLabel = gameMode === 'become' ? 'Become a Country' : 'Build My Own';
-  document.getElementById('diffChip').textContent = `${modeLabel} · ${diffNames[difficulty]}`;
+  const diffNames = {normal:'Normal', hard:'Hard'};
+  const modeLabels = {build:'Build My Own', become:'Become a Country', daily:'Daily Challenge'};
+  document.getElementById('diffChip').textContent = `${modeLabels[gameMode]} · ${diffNames[difficulty]}`;
   document.getElementById('rerollChip').textContent = 'Rerolls: ' + rerollsRemaining + '/' + rerollsMax;
   document.getElementById('rerollChip').classList.toggle('hidden', rerollsMax===0);
   document.getElementById('statsChip').classList.remove('hidden');
@@ -798,6 +858,12 @@ function renderRecapBar(){
 
 /* ============ PHASE 1: DRAFT ============ */
 function startDraft(){
+  if(gameMode === 'daily'){
+    if(hasDoneDailyToday()) return; // guard against any way to double-trigger
+    difficulty = 'hard';
+    markDailyDoneToday();
+  }
+
   document.getElementById('panel-brief').classList.add('hidden');
   document.getElementById('panel-draft').classList.remove('hidden');
   document.getElementById('sessionBar').classList.remove('hidden');
@@ -805,7 +871,7 @@ function startDraft(){
   sfxClick();
   showRestartButton();
 
-  dailyMode = document.getElementById('dailyModeToggle') ? document.getElementById('dailyModeToggle').checked : false;
+  dailyMode = (gameMode === 'daily');
   if(dailyMode){
     dailySeedUsed = todaysSeedString();
     rng = mulberry32(hashSeed(dailySeedUsed));
@@ -814,9 +880,9 @@ function startDraft(){
     rng = Math.random;
   }
 
-  rerollsMax = difficulty==='easy' ? 3 : (difficulty==='medium' ? 1 : 0);
+  rerollsMax = (dailyMode || difficulty==='hard') ? 0 : 1;
   rerollsRemaining = rerollsMax;
-  statsVisible = document.getElementById('statsPrefToggle').checked;
+  statsVisible = dailyMode ? false : document.getElementById('statsPrefToggle').checked;
 
   deck = shuffle(COUNTRIES);
   deckPtr = 0;
@@ -931,7 +997,7 @@ let reelItems = [];
 let reelRepeats = 9;
 
 function buildReelList(){
-  reelItems = gameMode === 'become' ? COUNTRIES.map(c=>c.n) : REGIONS;
+  reelItems = isBecomeLike() ? COUNTRIES.map(c=>c.n) : REGIONS;
   reelRepeats = reelItems.length > 30 ? 3 : 9;
   const list = document.getElementById('reelList');
   let html = '';
@@ -943,7 +1009,11 @@ function buildReelList(){
 function startWheel(){
   document.getElementById('panel-draft').classList.add('hidden');
   document.getElementById('panel-wheel').classList.remove('hidden');
-  if(gameMode === 'become'){
+  if(gameMode === 'daily'){
+    document.getElementById('wheelHeading').textContent = "Today's Country Reveal";
+    document.getElementById('wheelDesc').textContent = "Same spin for everyone playing today. Your drafted stats stay the same — you take on today's country name and its real-world neighbors become your rivals.";
+    document.getElementById('coalitionNameBox').classList.add('hidden');
+  } else if(gameMode === 'become'){
     document.getElementById('wheelHeading').textContent = 'Country Reel';
     document.getElementById('wheelDesc').textContent = 'Spin to find out which real country you become — your drafted stats stay the same, but you take on its name and its real-world neighbors become your rivals.';
     document.getElementById('coalitionNameBox').classList.add('hidden');
@@ -963,7 +1033,7 @@ function spinReel(){
 
   const chosenIndex = Math.floor(rng()*reelItems.length);
   const chosenLabel = reelItems[chosenIndex];
-  if(gameMode === 'become'){
+  if(isBecomeLike()){
     chosenCountry = COUNTRIES.find(c=>c.n===chosenLabel);
     chosenRegion = chosenCountry.r;
   } else {
@@ -999,7 +1069,7 @@ function startCampaign(){
   document.getElementById('panel-campaign').classList.remove('hidden');
   setPhase(3);
 
-  if(gameMode === 'become'){
+  if(isBecomeLike()){
     coalitionName = chosenCountry.n;
 
     let pool = shuffle(COUNTRIES.filter(c=>c.r===chosenRegion && c.n!==chosenCountry.n));
@@ -1131,8 +1201,8 @@ function renderHighScoresModal(){
     <div class="hs-row">
       <div class="hs-rank">#${i+1}</div>
       <div>
-        <div class="hs-score">${escapeHtml(s.name || 'Unnamed Country')} <span class="hs-badge ${s.win?'win':'loss'}">${s.win?'WIN':'LOSS'}</span></div>
-        <div class="hs-meta">${s.score} pts · ${escapeHtml(s.region)} · ${escapeHtml(s.difficulty)} · ${escapeHtml(s.date)}</div>
+        <div class="hs-score">${escapeHtml(s.country || 'Unnamed Country')} <span class="hs-badge ${s.win?'win':'loss'}">${s.win?'WIN':'LOSS'}</span></div>
+        <div class="hs-meta">${escapeHtml(s.name || 'Anonymous Commander')} · ${s.score} pts · ${escapeHtml(s.region)} · ${escapeHtml(s.difficulty)} · ${escapeHtml(s.date)}</div>
       </div>
     </div>`).join('');
 }
@@ -1180,6 +1250,7 @@ function submitGlobalScore(rec){
       },
       body: JSON.stringify({
         name: String(rec.name).slice(0,30),
+        countryName: String(rec.countryName).slice(0,30),
         difficulty: rec.difficulty,
         region: rec.region,
         gridSelections: rec.gridSelections,
@@ -1198,8 +1269,8 @@ function submitGlobalScore(rec){
   }catch(e){ console.error('Geo Draft: leaderboard submit failed —', e); }
 }
 
-let glbDifficulty = 'easy';
-let glbDailyOnly = false;
+let glbDifficulty = 'normal';
+let glbBoard = 'freeplay'; // 'freeplay' | 'daily'
 document.querySelectorAll('#glbTabs .diff-opt').forEach(opt=>{
   opt.addEventListener('click', ()=>{
     document.querySelectorAll('#glbTabs .diff-opt').forEach(o=>o.classList.remove('active'));
@@ -1208,8 +1279,12 @@ document.querySelectorAll('#glbTabs .diff-opt').forEach(opt=>{
     loadGlobalLeaderboard();
   });
 });
-function toggleGlbDaily(){
-  glbDailyOnly = document.getElementById('glbDailyToggle').checked;
+function setGlbBoard(board){
+  glbBoard = board;
+  document.getElementById('glbBoardFreeplay').classList.toggle('active', board==='freeplay');
+  document.getElementById('glbBoardDaily').classList.toggle('active', board==='daily');
+  document.getElementById('glbTabs').classList.toggle('hidden', board==='daily');
+  document.getElementById('glbDailyHeading').classList.toggle('hidden', board!=='daily');
   loadGlobalLeaderboard();
 }
 function openGlobalLeaderboard(){
@@ -1224,16 +1299,16 @@ async function loadGlobalLeaderboard(){
   }
   list.innerHTML = '<p style="color:var(--ink-soft);">Loading...</p>';
   try{
-    let query = sb.from('leaderboard')
-      .select('*')
-      .eq('difficulty', glbDifficulty);
-    if(glbDailyOnly){
+    let query = sb.from('leaderboard').select('*');
+    if(glbBoard === 'daily'){
       query = query.eq('daily_seed', todaysSeedString());
+    } else {
+      query = query.eq('difficulty', glbDifficulty).is('daily_seed', null);
     }
     const {data, error} = await query.order('score', {ascending:false}).limit(20);
     if(error) throw error;
     if(!data || !data.length){
-      list.innerHTML = glbDailyOnly
+      list.innerHTML = glbBoard === 'daily'
         ? '<p style="color:var(--ink-soft);">No Daily Challenge runs yet today — be the first!</p>'
         : '<p style="color:var(--ink-soft);">No scores yet for this difficulty — be the first!</p>';
       return;
@@ -1243,8 +1318,8 @@ async function loadGlobalLeaderboard(){
       <div class="hs-row" ${s.player_id===myId ? 'style="background:var(--teal-tint); border-radius:10px; padding-left:6px;"' : ''}>
         <div class="hs-rank">#${i+1}</div>
         <div>
-          <div class="hs-score">${escapeHtml(s.name || 'Unnamed Country')} ${s.player_id===myId ? '<span class="hs-badge win">YOU</span>' : ''} <span class="hs-badge ${s.win?'win':'loss'}">${s.win?'WIN':'LOSS'}</span></div>
-          <div class="hs-meta">${s.score} pts · ${escapeHtml(s.region)}</div>
+          <div class="hs-score">${escapeHtml(s.name || 'Anonymous Commander')} ${s.player_id===myId ? '<span class="hs-badge win">YOU</span>' : ''} <span class="hs-badge ${s.win?'win':'loss'}">${s.win?'WIN':'LOSS'}</span></div>
+          <div class="hs-meta">as ${escapeHtml(s.country_name || '—')} · ${s.score} pts · ${escapeHtml(s.region)}</div>
         </div>
       </div>`).join('');
   }catch(e){
@@ -1270,6 +1345,14 @@ function hideSplash(){
     if(textEl) textEl.textContent = messages[i];
   }, 500);
   setTimeout(()=>{ clearInterval(interval); hideSplash(); }, 1500);
+})();
+(function initBriefing(){
+  const savedName = getPlayerUsername();
+  if(savedName){
+    const input = document.getElementById('playerUsernameInput');
+    if(input) input.value = savedName;
+  }
+  refreshDailyCardState();
 })();
 function copyShareText(){
   const ta = document.getElementById('shareTextarea');
@@ -1329,9 +1412,10 @@ function revealResults(playerFinal, blocFinal, playerScores, blocScoresAvg, win,
   // with only a modest flat bonus for winning — so a strong, close loss can still
   // outscore a scrappy, narrow win. Max possible: 1000 (power) + 150 (win) + 300 (margin) = 1450.
   const finalScore = Math.max(0, Math.round(playerFinal*10 + (win ? 150 : 0) + marginNum*3));
+  const playerName = getPlayerUsername() || 'Anonymous Commander';
   const scores = loadHighScores();
   const isNewBest = scores.length===0 || finalScore > scores[0].score;
-  scores.push({name:coalitionName, score:finalScore, region:chosenRegion, win, difficulty, date:new Date().toLocaleDateString(), daily: dailySeedUsed});
+  scores.push({name:playerName, country:coalitionName, score:finalScore, region:chosenRegion, win, difficulty, date:new Date().toLocaleDateString(), daily: dailySeedUsed});
   scores.sort((a,b)=>b.score-a.score);
   const trimmed = scores.slice(0,10);
   saveHighScores(trimmed);
@@ -1342,7 +1426,8 @@ function revealResults(playerFinal, blocFinal, playerScores, blocScoresAvg, win,
   const gridSelections = {};
   CATEGORIES.forEach(c=>{ gridSelections[c.key] = grid[c.key].country; });
   submitGlobalScore({
-    name: coalitionName,
+    name: playerName,
+    countryName: coalitionName,
     difficulty,
     region: chosenRegion,
     gridSelections,
@@ -1353,15 +1438,16 @@ function revealResults(playerFinal, blocFinal, playerScores, blocScoresAvg, win,
   });
 
   const shareText = `🌐 GEO DRAFT — Campaign Report
-${coalitionName}
+${playerName} playing as ${coalitionName}
 ${win ? '🏆 VICTORY' : '💥 DEFEAT'} in the ${chosenRegion} theater
 Score: ${finalScore} pts (margin ${margin})`;
 
-  const safeName = escapeHtml(coalitionName);
+  const safeName = escapeHtml(playerName);
+  const safeCountry = escapeHtml(coalitionName);
   const resultArea = document.getElementById('resultArea');
   resultArea.innerHTML = `
     <div class="result-banner ${win?'win':'loss'}" id="resultBanner">
-      <div class="result-margin" style="font-weight:800; font-size:14px; color:var(--ink); margin-bottom:2px;">${safeName}</div>
+      <div class="result-margin" style="font-weight:800; font-size:14px; color:var(--ink); margin-bottom:2px;">${safeName} — ${safeCountry}</div>
       <div class="result-title ${win?'win':'loss'}">${win?'Victory!':'Defeat'}</div>
       <div class="result-margin">Decided by ${margin} composite points · Theater: ${chosenRegion}</div>
       <div class="score-label">Campaign Score</div>
