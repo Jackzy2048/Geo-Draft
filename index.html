@@ -1256,6 +1256,19 @@ function containsBlockedWord(str){
   return FILTER_BLOCKLIST.some(w => norm.includes(w));
 }
 
+function wireLiveNameFilter(inputId, errorId){
+  const input = document.getElementById(inputId);
+  const errEl = document.getElementById(errorId);
+  if(!input || !errEl) return;
+  input.addEventListener('input', ()=>{
+    const flagged = containsBlockedWord(input.value);
+    input.classList.toggle('invalid', flagged);
+    errEl.classList.toggle('hidden', !flagged);
+  });
+}
+wireLiveNameFilter('playerUsernameInput', 'usernameError');
+wireLiveNameFilter('coalitionNameInput', 'countryNameError');
+
 let highScoresMemory = [];
 function loadHighScores(){ try{ return JSON.parse(localStorage.getItem('geoDraftHighScores')||'[]'); }catch(e){ return highScoresMemory; } }
 function saveHighScores(arr){ try{ localStorage.setItem('geoDraftHighScores', JSON.stringify(arr)); }catch(e){ highScoresMemory = arr; } }
