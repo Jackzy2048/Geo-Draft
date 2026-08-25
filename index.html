@@ -454,7 +454,7 @@
   <div class="hidden" id="restartBtnWrap" style="text-align:center; margin-top:20px;">
     <button class="btn btn-danger small" onclick="confirmRestart()">🔄 Restart Run</button>
   </div>
-  <footer>Geo Draft v0.5 (BETA) · <a onclick="openChangelog()">Changelog</a><br>All figures are rough, rounded, game-balanced approximations — not a geopolitical or military reference.</footer>
+  <footer>Geo Draft v1.0 · <a onclick="openChangelog()">Changelog</a><br>All figures are rough, rounded, game-balanced approximations — not a geopolitical or military reference.</footer>
 </div>
 
 <!-- TUTORIAL MODAL -->
@@ -515,6 +515,26 @@
 <div class="modal-backdrop hidden" id="clBackdrop">
   <div class="modal-card">
     <div class="modal-head"><h3>📜 Changelog</h3><button class="modal-x" onclick="closeModal('clBackdrop')">✕</button></div>
+    <div class="cl-entry">
+      <div class="cl-version">v1.0 — Full Release</div>
+      <ul>
+        <li>Full dataset rebuilt from real published sources: World Bank (population), IMF (GDP), Ookla Speedtest Global Index (internet speed), SIPRI/IISS (military spending), Ember/IEA (renewable energy) — no more placeholder numbers</li>
+        <li>Dynamic per-region Home Field Advantage rebalanced against the real dataset, so which region the reel lands on matters far less than how well you drafted</li>
+        <li>Reworked score formula — rewards decisive performance and margin, not just a win/loss coin flip</li>
+        <li>🔥 Gauntlet mode — draft once, defend that grid region after region until your first loss; streaks tracked on their own leaderboard</li>
+        <li>🎯 Weekly Theme — a rotating regional theme every week (with an opt-out toggle to ignore it and play anywhere)</li>
+        <li>🗓️ Daily Challenge as a full standalone mode — same country, same rivals for everyone that day, one attempt only, locked to Hard difficulty with hidden stats for a fair fight</li>
+        <li>Separate username + country name, both shown on the leaderboard</li>
+        <li>Profanity filter on names — live as you type, and re-checked server-side so it can't be bypassed</li>
+        <li>Server-side score validation — a Supabase Edge Function independently recomputes every submitted score (and every Gauntlet round) from the raw draft choices before anything is written, so scores can't be faked from the browser console</li>
+        <li>All-Time, This Week, Daily, and Gauntlet leaderboard tabs, each showing your own runs highlighted</li>
+        <li>"This Week" leaderboard resets Monday midnight New Zealand time</li>
+        <li>Back to Menu button that preserves your mode/difficulty settings; Run New Campaign resumes them automatically unless you just played Daily Challenge</li>
+        <li>Rolling tumble animation when a new nation is dealt into the draft or rerolled</li>
+        <li>Land Mass and Population now display in sensible units (k km² / M km², M / B) instead of always in thousands or millions</li>
+        <li>Simplified difficulty from three tiers to two — Normal and Hard (Easy mode removed)</li>
+      </ul>
+    </div>
     <div class="cl-entry">
       <div class="cl-version">v0.5 (BETA)</div>
       <ul>
@@ -1555,6 +1575,39 @@ function submitGlobalScore(rec){
       showToast('⚠️ Couldn\'t reach the global leaderboard — score saved locally only.');
     });
   }catch(e){ console.error('Geo Draft: leaderboard submit failed —', e); }
+}
+
+function submitGauntletScore(rec){
+  if(SUPABASE_URL === 'YOUR_SUPABASE_URL') return;
+  try{
+    fetch(`${SUPABASE_URL}/functions/v1/submit-gauntlet`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'apikey': SUPABASE_ANON_KEY
+      },
+      body: JSON.stringify({
+        name: String(rec.name).slice(0,30),
+        countryName: String(rec.countryName).slice(0,30),
+        difficulty: rec.difficulty,
+        gridSelections: rec.gridSelections,
+        rounds: rec.rounds,
+        playerId: getPlayerId()
+      })
+    }).then(async res=>{
+      if(!res.ok){
+        const body = await res.text().catch(()=>'');
+        console.error('Geo Draft: gauntlet submit failed —', res.status, body);
+        let msg = 'Streak saved locally, but the Gauntlet leaderboard rejected it.';
+        try{ const parsed = JSON.parse(body); if(parsed && parsed.error) msg += ' (' + parsed.error + ')'; }catch(e){}
+        showToast('⚠️ ' + msg);
+      }
+    }).catch(e=>{
+      console.error('Geo Draft: gauntlet submit failed —', e);
+      showToast('⚠️ Couldn\'t reach the Gauntlet leaderboard — streak saved locally only.');
+    });
+  }catch(e){ console.error('Geo Draft: gauntlet submit failed —', e); }
 }
 
 let glbDifficulty = 'normal';
