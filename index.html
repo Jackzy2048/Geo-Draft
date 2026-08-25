@@ -318,7 +318,7 @@
     <h2>Mission Briefing</h2>
     <div class="theme-banner" id="themeBanner"></div>
     <div class="stats-pref" id="themeToggleBox" style="margin-bottom:18px;">
-      <label class="switch"><input type="checkbox" id="themeToggleInput" checked><span class="switch-slider"></span></label>
+      <label class="switch"><input type="checkbox" id="themeToggleInput"><span class="switch-slider"></span></label>
       <div>
         <div class="stats-pref-label">Stick to this week's theme</div>
         <div class="stats-pref-sub">Turn off to draw from every region in the world, ignoring this week's restriction.</div>
@@ -728,7 +728,7 @@ function getWeeklyTheme(){
   const idx = ((weekIndexSinceEpoch() % WEEKLY_THEMES.length) + WEEKLY_THEMES.length) % WEEKLY_THEMES.length;
   return WEEKLY_THEMES[idx];
 }
-let useWeeklyTheme = true;
+let useWeeklyTheme = false;
 function themeRegions(){
   if(!useWeeklyTheme) return REGIONS;
   const theme = getWeeklyTheme();
@@ -1164,6 +1164,9 @@ function startWheel(){
     document.getElementById('coalitionNameBox').classList.remove('hidden');
   }
   setPhase(2);
+  document.getElementById('spinBtn').disabled = false;
+  document.getElementById('toCampaignBtn').classList.add('hidden');
+  document.getElementById('reelResult').textContent = '\u00a0';
   buildReelList();
 }
 function spinReel(){
