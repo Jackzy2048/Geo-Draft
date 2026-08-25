@@ -88,6 +88,12 @@
   .diff-select{display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; margin-bottom:14px;}
   .section-label{font-family:'Fredoka',sans-serif; font-weight:600; font-size:12px; letter-spacing:.05em; text-transform:uppercase; color:var(--ink-soft); margin-bottom:8px;}
   .section-divider{border:none; border-top:1px solid var(--line); margin:20px 0;}
+  .theme-banner{
+    display:flex; align-items:center; gap:10px; background:var(--teal-tint); border:1.5px solid var(--teal);
+    border-radius:var(--r-md); padding:10px 14px; margin-bottom:16px; font-family:'Fredoka',sans-serif;
+    font-weight:600; font-size:14px; color:var(--teal-dark);
+  }
+  .theme-banner .emoji{font-size:22px;}
   .mode-select-grid .diff-opt{padding:16px;}
   .diff-opt{border:2px solid var(--line); background:var(--card-alt); border-radius:var(--r-md); padding:14px 16px; cursor:pointer; transition:border-color .15s, transform .1s;}
   .diff-opt:hover{transform:translateY(-2px);}
@@ -310,6 +316,14 @@
   <!-- PHASE 0: BRIEFING -->
   <div class="panel" id="panel-brief">
     <h2>Mission Briefing</h2>
+    <div class="theme-banner" id="themeBanner"></div>
+    <div class="stats-pref" id="themeToggleBox" style="margin-bottom:18px;">
+      <label class="switch"><input type="checkbox" id="themeToggleInput" checked><span class="switch-slider"></span></label>
+      <div>
+        <div class="stats-pref-label">Stick to this week's theme</div>
+        <div class="stats-pref-sub">Turn off to draw from every region in the world, ignoring this week's restriction.</div>
+      </div>
+    </div>
     <p class="desc" id="briefDescBuild">
       Eight category slots sit open on your grid: Population, Land Mass, Military Budget, Coastline, GDP, Airports,
       Internet Speed, and Renewable Energy. Nations get pulled from the global pool one at a time — you decide which
@@ -325,6 +339,11 @@
       One shot a day. Everyone playing today draws from the same shuffled deck and becomes the same country, so
       it's rivals-for-rivals the same fight for everybody — no region luck, no easier draw. Locked to Hard difficulty
       with stats hidden so it's a fair, skill-only leaderboard.
+    </p>
+    <p class="desc" id="briefDescGauntlet" style="display:none;">
+      Draft one grid, then defend it region after region, back-to-back, with no do-overs — the same country stats stay
+      locked in the whole way through. Win and the reel spins again for a new, unfaced region; lose once and the run
+      ends. Your streak (how many regions you survived) is what gets submitted to the Gauntlet leaderboard.
     </p>
 
     <div class="section-label">Your Name</div>
@@ -347,6 +366,10 @@
       <div class="diff-opt" data-m="daily" id="dailyModeOpt">
         <div class="diff-name">🗓️ Daily Challenge</div>
         <div class="diff-desc" id="dailyModeDesc">Same deck, same country, same rivals as everyone else today — one attempt only</div>
+      </div>
+      <div class="diff-opt" data-m="gauntlet">
+        <div class="diff-name">🔥 Gauntlet</div>
+        <div class="diff-desc">Draft once, defend it region after region until you lose — how long can you survive?</div>
       </div>
     </div>
 
@@ -459,17 +482,19 @@
 <div class="modal-backdrop hidden" id="glbBackdrop">
   <div class="modal-card">
     <div class="modal-head"><h3>🌍 Global Leaderboard</h3><button class="modal-x" onclick="closeModal('glbBackdrop')">✕</button></div>
-    <div class="diff-select" style="margin-bottom:12px; grid-template-columns:repeat(3,1fr);">
-      <div class="diff-opt active" id="glbBoardFreeplay" onclick="setGlbBoard('freeplay')" style="padding:10px;"><div class="diff-name" style="font-size:14px;">🌐 All-Time</div></div>
-      <div class="diff-opt" id="glbBoardWeekly" onclick="setGlbBoard('weekly')" style="padding:10px;"><div class="diff-name" style="font-size:14px;">📅 This Week</div></div>
-      <div class="diff-opt" id="glbBoardDaily" onclick="setGlbBoard('daily')" style="padding:10px;"><div class="diff-name" style="font-size:14px;">🗓️ Daily</div></div>
+    <div class="diff-select" style="margin-bottom:12px; grid-template-columns:repeat(4,1fr);">
+      <div class="diff-opt active" id="glbBoardFreeplay" onclick="setGlbBoard('freeplay')" style="padding:8px 4px;"><div class="diff-name" style="font-size:12.5px;">🌐 All-Time</div></div>
+      <div class="diff-opt" id="glbBoardWeekly" onclick="setGlbBoard('weekly')" style="padding:8px 4px;"><div class="diff-name" style="font-size:12.5px;">📅 Week</div></div>
+      <div class="diff-opt" id="glbBoardDaily" onclick="setGlbBoard('daily')" style="padding:8px 4px;"><div class="diff-name" style="font-size:12.5px;">🗓️ Daily</div></div>
+      <div class="diff-opt" id="glbBoardGauntlet" onclick="setGlbBoard('gauntlet')" style="padding:8px 4px;"><div class="diff-name" style="font-size:12.5px;">🔥 Gauntlet</div></div>
     </div>
     <div class="diff-select" id="glbTabs" style="margin-bottom:12px;">
       <div class="diff-opt active" data-gd="normal" style="padding:10px;"><div class="diff-name" style="font-size:15px;">Normal</div></div>
       <div class="diff-opt" data-gd="hard" style="padding:10px;"><div class="diff-name" style="font-size:15px;">Hard</div></div>
     </div>
     <div id="glbDailyHeading" class="hidden" style="text-align:center; color:var(--ink-soft); font-size:12.5px; margin-bottom:12px;">Today's Daily Challenge — Hard difficulty, one attempt each, everyone facing the same country and rivals.</div>
-    <div id="glbWeeklyHeading" class="hidden" style="text-align:center; color:var(--ink-soft); font-size:12.5px; margin-bottom:12px;">Resets every Monday (UTC) — this week's best runs only.</div>
+    <div id="glbWeeklyHeading" class="hidden" style="text-align:center; color:var(--ink-soft); font-size:12.5px; margin-bottom:12px;">Resets every Monday midnight NZ time — this week's best runs only.</div>
+    <div id="glbGauntletHeading" class="hidden" style="text-align:center; color:var(--ink-soft); font-size:12.5px; margin-bottom:12px;">Longest streaks — one grid, defended region after region until the first loss.</div>
     <div id="glbList"><p style="color:var(--ink-soft);">Loading...</p></div>
   </div>
 </div>
@@ -657,6 +682,45 @@ function computeRegionHFA(members){
 let currentHFA = BASE_HFA_MULT;
 const REGIONS = [...new Set(COUNTRIES.map(c=>c.r))];
 
+/* ============ WEEKLY THEME ============
+   A rotating themed subset of regions, the same for every player during a
+   given NZ week, tied to the same Monday-NZST boundary the weekly leaderboard
+   already resets on — so "this week" actually plays differently, not just a
+   time-filtered slice of the same game. */
+const WEEKLY_THEMES = [
+  { name:"Anything Goes",        emoji:"🌐", regions: null },
+  { name:"The Americas",          emoji:"🌎", regions: ["North America","Central America","Caribbean","South America"] },
+  { name:"Europe",                emoji:"🏰", regions: ["Western Europe","Northern Europe","Southern Europe","Eastern Europe"] },
+  { name:"Sub-Saharan Africa",    emoji:"🌍", regions: ["West Africa","Central Africa","East Africa","Southern Africa"] },
+  { name:"Asia",                  emoji:"🏯", regions: ["South Asia","East Asia","Southeast Asia","Central Asia"] },
+  { name:"Middle East & North Africa", emoji:"🕌", regions: ["Middle East","North Africa"] },
+  { name:"Pacific & Oceania",     emoji:"🏝️", regions: ["Oceania","Southeast Asia"] },
+];
+function weekIndexSinceEpoch(){
+  // Number of NZ-local Monday-to-Monday weeks since a fixed reference Monday —
+  // deterministic and identical for every player, used purely to rotate themes.
+  const startISO = startOfThisWeekISO();
+  const startMs = new Date(startISO).getTime();
+  const refMs = Date.UTC(2024, 0, 1); // arbitrary fixed reference point, never changes
+  return Math.floor((startMs - refMs) / (7*24*60*60*1000));
+}
+function getWeeklyTheme(){
+  const idx = ((weekIndexSinceEpoch() % WEEKLY_THEMES.length) + WEEKLY_THEMES.length) % WEEKLY_THEMES.length;
+  return WEEKLY_THEMES[idx];
+}
+let useWeeklyTheme = true;
+function themeRegions(){
+  if(!useWeeklyTheme) return REGIONS;
+  const theme = getWeeklyTheme();
+  return theme.regions ? REGIONS.filter(r => theme.regions.includes(r)) : REGIONS;
+}
+function themeCountryNames(){
+  if(!useWeeklyTheme) return COUNTRIES.map(c=>c.n);
+  const theme = getWeeklyTheme();
+  const pool = theme.regions ? COUNTRIES.filter(c => theme.regions.includes(c.r)) : COUNTRIES;
+  return pool.map(c => c.n);
+}
+
 /* ============ THEME ============ */
 function updateThemeButton(){
   const dark = document.documentElement.classList.contains('dark');
@@ -763,15 +827,19 @@ document.querySelectorAll('#modeSelect .diff-opt').forEach(opt=>{
     document.getElementById('briefDescBuild').style.display = gameMode==='build' ? '' : 'none';
     document.getElementById('briefDescBecome').style.display = gameMode==='become' ? '' : 'none';
     document.getElementById('briefDescDaily').style.display = gameMode==='daily' ? '' : 'none';
+    document.getElementById('briefDescGauntlet').style.display = gameMode==='gauntlet' ? '' : 'none';
 
     const buildOpts = document.getElementById('buildModeOptions');
     const dailyNotice = document.getElementById('dailyLockedNotice');
+    const themeToggleBox = document.getElementById('themeToggleBox');
     if(gameMode === 'daily'){
       buildOpts.classList.add('hidden');
       dailyNotice.classList.remove('hidden');
+      themeToggleBox.classList.add('hidden');
     } else {
       buildOpts.classList.remove('hidden');
       dailyNotice.classList.add('hidden');
+      themeToggleBox.classList.remove('hidden');
     }
     sfxClick();
   });
@@ -818,6 +886,16 @@ document.querySelectorAll('#diffSelect .diff-opt').forEach(opt=>{
 let deck = [], deckPtr = 0, grid = {};
 let rerollsMax = 3, rerollsRemaining = 3, statsVisible = true;
 let chosenRegion = null, chosenCountry = null, rivals = [];
+
+/* ============ GAUNTLET STATE ============ */
+let gauntletStreak = 0;
+let gauntletFacedRegions = [];
+let gauntletRounds = []; // [{region, rivalNames, playerVar, blocVar}, ...] — sent for server-side re-validation
+function resetGauntletState(){
+  gauntletStreak = 0;
+  gauntletFacedRegions = [];
+  gauntletRounds = [];
+}
 
 /* ============ RNG (supports Daily Challenge seeding) ============ */
 function mulberry32(seed){
@@ -905,6 +983,9 @@ function startDraft(){
   rerollsMax = (dailyMode || difficulty==='hard') ? 0 : 1;
   rerollsRemaining = rerollsMax;
   statsVisible = dailyMode ? false : document.getElementById('statsPrefToggle').checked;
+  useWeeklyTheme = (gameMode === 'daily') ? true : document.getElementById('themeToggleInput').checked;
+
+  if(gameMode === 'gauntlet') resetGauntletState();
 
   deck = shuffle(COUNTRIES);
   deckPtr = 0;
@@ -1019,7 +1100,16 @@ let reelItems = [];
 let reelRepeats = 9;
 
 function buildReelList(){
-  reelItems = isBecomeLike() ? COUNTRIES.map(c=>c.n) : REGIONS;
+  const themedRegions = themeRegions();
+  const themedCountries = themeCountryNames();
+  if(isBecomeLike()){
+    reelItems = (gameMode === 'daily') ? COUNTRIES.map(c=>c.n) : themedCountries;
+  } else if(gameMode === 'gauntlet'){
+    reelItems = themedRegions.filter(r => !gauntletFacedRegions.includes(r));
+    if(!reelItems.length) reelItems = themedRegions; // all themed regions cleared — allow repeats rather than dead-end
+  } else {
+    reelItems = themedRegions;
+  }
   reelRepeats = reelItems.length > 30 ? 3 : 9;
   const list = document.getElementById('reelList');
   let html = '';
@@ -1028,9 +1118,13 @@ function buildReelList(){
   list.style.transition = 'none';
   list.style.transform = 'translateY(0px)';
 }
+function showOnlyPanel(id){
+  ['panel-brief','panel-draft','panel-wheel','panel-campaign'].forEach(p=>{
+    document.getElementById(p).classList.toggle('hidden', p !== id);
+  });
+}
 function startWheel(){
-  document.getElementById('panel-draft').classList.add('hidden');
-  document.getElementById('panel-wheel').classList.remove('hidden');
+  showOnlyPanel('panel-wheel');
   if(gameMode === 'daily'){
     document.getElementById('wheelHeading').textContent = "Today's Country Reveal";
     document.getElementById('wheelDesc').textContent = "Same spin for everyone playing today. Your drafted stats stay the same — you take on today's country name and its real-world neighbors become your rivals.";
@@ -1039,6 +1133,11 @@ function startWheel(){
     document.getElementById('wheelHeading').textContent = 'Country Reel';
     document.getElementById('wheelDesc').textContent = 'Spin to find out which real country you become — your drafted stats stay the same, but you take on its name and its real-world neighbors become your rivals.';
     document.getElementById('coalitionNameBox').classList.add('hidden');
+  } else if(gameMode === 'gauntlet'){
+    const roundNum = gauntletRounds.length + 1;
+    document.getElementById('wheelHeading').textContent = roundNum === 1 ? 'Gauntlet — Region 1' : `Gauntlet — Region ${roundNum} (Streak: ${gauntletStreak})`;
+    document.getElementById('wheelDesc').textContent = 'Spin for your next battlefield. Your drafted grid stays exactly as it is — win and the gauntlet continues, lose once and it ends here.';
+    document.getElementById('coalitionNameBox').classList.toggle('hidden', roundNum > 1);
   } else {
     document.getElementById('wheelHeading').textContent = 'Region Reel';
     document.getElementById('wheelDesc').textContent = 'Spin to determine the sub-region where your country makes its stand.';
@@ -1061,6 +1160,9 @@ function spinReel(){
   } else {
     chosenCountry = null;
     chosenRegion = chosenLabel;
+  }
+  if(gameMode === 'gauntlet' && !gauntletFacedRegions.includes(chosenRegion)){
+    gauntletFacedRegions.push(chosenRegion);
   }
   const targetRepeat = Math.max(1, Math.floor(reelRepeats/2));
   const targetRow = targetRepeat*reelItems.length + chosenIndex;
@@ -1087,7 +1189,8 @@ function spinReel(){
 /* ============ PHASE 3: CAMPAIGN ============ */
 let coalitionName = 'Unnamed Country';
 function attemptDeploy(){
-  if(gameMode === 'build'){
+  const needsNameCheck = gameMode === 'build' || (gameMode === 'gauntlet' && gauntletRounds.length === 0);
+  if(needsNameCheck){
     const input = document.getElementById('coalitionNameInput');
     const val = input.value.trim();
     const errEl = document.getElementById('countryNameError');
@@ -1103,8 +1206,7 @@ function attemptDeploy(){
   startCampaign();
 }
 function startCampaign(){
-  document.getElementById('panel-wheel').classList.add('hidden');
-  document.getElementById('panel-campaign').classList.remove('hidden');
+  showOnlyPanel('panel-campaign');
   setPhase(3);
 
   if(isBecomeLike()){
@@ -1220,6 +1322,107 @@ function clashRow(label, color, youScore, blocScore, big){
       </div>
       <div class="clash-vals"><span>You: ${youScore.toFixed(0)}</span><span>Bloc: ${blocScore.toFixed(0)}</span></div>
     </div>`;
+}
+
+/* ---- Gauntlet round handling ---- */
+function handleGauntletRoundResult(playerFinal, blocFinal, win, playerVar, blocVar){
+  const margin = Math.abs(playerFinal - blocFinal).toFixed(1);
+  const term = document.getElementById('terminal');
+  const finalLine = document.createElement('div');
+  finalLine.className = win ? 'line-teal' : 'line-coral';
+  finalLine.textContent = `> RESULT: ${win ? 'REGION HELD' : 'REGION LOST'} — ${chosenRegion}: Coalition ${playerFinal.toFixed(1)} vs Bloc ${blocFinal.toFixed(1)}`;
+  term.appendChild(finalLine);
+  term.scrollTop = term.scrollHeight;
+  win ? sfxWin() : sfxLose();
+
+  gauntletRounds.push({
+    region: chosenRegion,
+    rivalNames: rivals.map(r=>r.n),
+    playerVar, blocVar
+  });
+
+  const resultArea = document.getElementById('resultArea');
+  if(win){
+    gauntletStreak++;
+    resultArea.innerHTML = `
+      <div class="result-banner win" id="resultBanner">
+        <div class="result-title win">Region Held!</div>
+        <div class="result-margin">${escapeHtml(chosenRegion)} survived · margin ${margin} · Streak: ${gauntletStreak}</div>
+      </div>
+      <div class="clash-block">
+        <div class="clash-legend">
+          <span><span class="legend-dot" style="background:var(--teal)"></span>${escapeHtml(coalitionName)}</span>
+          <span><span class="legend-dot" style="background:var(--coral)"></span>${escapeHtml(chosenRegion)} Bloc</span>
+        </div>
+        ${clashRow('Overall Power', null, playerFinal, blocFinal, true)}
+      </div>
+      <div style="text-align:center; margin-top:14px;">
+        <button class="btn primary" onclick="continueGauntlet()">Continue Gauntlet → (Streak ${gauntletStreak})</button>
+      </div>
+    `;
+    requestAnimationFrame(()=>{
+      setTimeout(()=>{
+        document.querySelectorAll('.clash-fill').forEach((el,idx)=>{
+          const w = el.getAttribute('data-w');
+          setTimeout(()=>{ el.style.width = w+'%'; }, idx*35);
+        });
+      }, 30);
+    });
+  } else {
+    endGauntlet(margin);
+  }
+}
+function continueGauntlet(){
+  startWheel();
+}
+function endGauntlet(margin){
+  const finalStreak = gauntletStreak;
+  const playerName = getPlayerUsername() || 'Anonymous Commander';
+  const fullClear = gauntletFacedRegions.length >= themeRegions().length;
+
+  const scores = loadHighScores();
+  scores.push({name:playerName, country:coalitionName, score:finalStreak, region:chosenRegion, win:false, difficulty, date:new Date().toLocaleDateString(), gauntlet:true});
+  scores.sort((a,b)=>b.score-a.score);
+  saveHighScores(scores.slice(0,10));
+
+  submitGauntletScore({
+    name: playerName,
+    countryName: coalitionName,
+    difficulty,
+    gridSelections: (()=>{ const g={}; CATEGORIES.forEach(c=>{ g[c.key]=grid[c.key].country; }); return g; })(),
+    rounds: gauntletRounds
+  });
+
+  const safeName = escapeHtml(playerName);
+  const safeCountry = escapeHtml(coalitionName);
+  const shareText = `🌐 GEO DRAFT — Gauntlet Report
+${playerName} playing as ${coalitionName}
+Survived ${finalStreak} region${finalStreak===1?'':'s'} before falling in the ${chosenRegion} theater${fullClear ? '\n🏆 FULL GAUNTLET CLEAR!' : ''}`;
+
+  const resultArea = document.getElementById('resultArea');
+  resultArea.innerHTML = `
+    <div class="result-banner loss" id="resultBanner">
+      <div class="result-margin" style="font-weight:800; font-size:14px; color:var(--ink); margin-bottom:2px;">${safeName} — ${safeCountry}</div>
+      <div class="result-title loss">Gauntlet Over</div>
+      <div class="result-margin">Fell in the ${escapeHtml(chosenRegion)} theater · margin ${margin}</div>
+      <div class="score-label">Regions Survived</div>
+      <div class="score-number" id="scoreNumber">0</div>
+      ${fullClear ? '<div class="new-best">🏆 Full Gauntlet Clear!</div>' : ''}
+    </div>
+    <div class="share-box">
+      <div class="share-title">📋 Share Your Run</div>
+      <textarea class="share-textarea" id="shareTextarea" readonly rows="5">${shareText}</textarea>
+      <button class="btn small" id="copyShareBtn" onclick="copyShareText()">Copy to Clipboard</button>
+    </div>
+    <div class="hs-inline" style="text-align:center;">
+      <button class="btn ghost small" onclick="openHighScores()">🏆 View High Scores</button>
+    </div>
+  `;
+  requestAnimationFrame(()=>{
+    setTimeout(()=>{ animateCount(document.getElementById('scoreNumber'), finalStreak, 900); }, 30);
+  });
+  document.getElementById('playAgainBtn').classList.remove('hidden');
+  document.getElementById('backToMenuBtn').classList.remove('hidden');
 }
 
 /* ---- Score & high scores ---- */
@@ -1364,23 +1567,43 @@ document.querySelectorAll('#glbTabs .diff-opt').forEach(opt=>{
     loadGlobalLeaderboard();
   });
 });
+function getNZOffsetMinutes(date){
+  // Reads New Zealand's actual current UTC offset (handles the NZST/NZDT
+  // daylight-saving switch automatically via the browser's timezone database).
+  try{
+    const dtf = new Intl.DateTimeFormat('en-US', {timeZone:'Pacific/Auckland', timeZoneName:'shortOffset'});
+    const part = dtf.formatToParts(date).find(p=>p.type==='timeZoneName').value; // e.g. "GMT+13"
+    const match = part.match(/GMT([+-]\d+)(?::(\d+))?/);
+    if(match){
+      const hours = parseInt(match[1],10);
+      const mins = match[2] ? parseInt(match[2],10) : 0;
+      return (hours<0? -1:1) * (Math.abs(hours)*60 + mins);
+    }
+  }catch(e){}
+  return 12*60; // fallback: NZST, UTC+12
+}
 function startOfThisWeekISO(){
-  // Monday 00:00 UTC of the current week — a fixed, timezone-consistent reset point
-  // so "this week" means the same thing for every player regardless of where they are.
+  // Monday 00:00 New Zealand time (NZST/NZDT-aware) — a single fixed reset
+  // point every player's "this week" leaderboard resets against.
   const now = new Date();
-  const utcDay = now.getUTCDay(); // 0=Sun..6=Sat
-  const daysSinceMonday = (utcDay + 6) % 7;
-  const monday = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - daysSinceMonday, 0, 0, 0));
-  return monday.toISOString();
+  const offsetMin = getNZOffsetMinutes(now);
+  const nzNow = new Date(now.getTime() + offsetMin*60000); // shifted so UTC-getters read NZ wall-clock values
+  const nzWeekday = nzNow.getUTCDay(); // 0=Sun..6=Sat, in NZ local time
+  const daysSinceMonday = (nzWeekday + 6) % 7;
+  const nzMonday = new Date(Date.UTC(nzNow.getUTCFullYear(), nzNow.getUTCMonth(), nzNow.getUTCDate() - daysSinceMonday, 0, 0, 0));
+  const trueUtcInstant = new Date(nzMonday.getTime() - offsetMin*60000);
+  return trueUtcInstant.toISOString();
 }
 function setGlbBoard(board){
   glbBoard = board;
   document.getElementById('glbBoardFreeplay').classList.toggle('active', board==='freeplay');
   document.getElementById('glbBoardWeekly').classList.toggle('active', board==='weekly');
   document.getElementById('glbBoardDaily').classList.toggle('active', board==='daily');
+  document.getElementById('glbBoardGauntlet').classList.toggle('active', board==='gauntlet');
   document.getElementById('glbTabs').classList.toggle('hidden', board==='daily');
   document.getElementById('glbDailyHeading').classList.toggle('hidden', board!=='daily');
   document.getElementById('glbWeeklyHeading').classList.toggle('hidden', board!=='weekly');
+  document.getElementById('glbGauntletHeading').classList.toggle('hidden', board!=='gauntlet');
   loadGlobalLeaderboard();
 }
 function openGlobalLeaderboard(){
@@ -1395,6 +1618,29 @@ async function loadGlobalLeaderboard(){
   }
   list.innerHTML = '<p style="color:var(--ink-soft);">Loading...</p>';
   try{
+    if(glbBoard === 'gauntlet'){
+      const {data, error} = await sb.from('gauntlet_scores')
+        .select('*')
+        .eq('difficulty', glbDifficulty)
+        .order('streak', {ascending:false})
+        .limit(20);
+      if(error) throw error;
+      if(!data || !data.length){
+        list.innerHTML = '<p style="color:var(--ink-soft);">No Gauntlet runs yet for this difficulty — be the first!</p>';
+        return;
+      }
+      const myId = getPlayerId();
+      list.innerHTML = data.map((s,i)=>`
+        <div class="hs-row" ${s.player_id===myId ? 'style="background:var(--teal-tint); border-radius:10px; padding-left:6px;"' : ''}>
+          <div class="hs-rank">#${i+1}</div>
+          <div>
+            <div class="hs-score">${escapeHtml(s.name || 'Anonymous Commander')} ${s.player_id===myId ? '<span class="hs-badge win">YOU</span>' : ''} <span class="hs-badge win">${s.streak} region${s.streak===1?'':'s'}</span></div>
+            <div class="hs-meta">as ${escapeHtml(s.country_name || '—')} · fell in ${escapeHtml(s.fell_in_region || '—')}</div>
+          </div>
+        </div>`).join('');
+      return;
+    }
+
     let query = sb.from('leaderboard').select('*');
     if(glbBoard === 'daily'){
       query = query.eq('daily_seed', todaysSeedString());
@@ -1500,6 +1746,13 @@ function hideSplash(){
     const input = document.getElementById('playerUsernameInput');
     if(input) input.value = savedName;
   }
+  const theme = getWeeklyTheme();
+  const banner = document.getElementById('themeBanner');
+  if(banner){
+    banner.innerHTML = theme.regions
+      ? `<span class="emoji">${theme.emoji}</span> This week's theme: <b>${theme.name}</b> — region &amp; country reels are drawn only from these areas until next Monday`
+      : `<span class="emoji">${theme.emoji}</span> This week: <b>${theme.name}</b> — full region pool, no restrictions`;
+  }
   refreshDailyCardState();
   consumeResumeState();
 })();
@@ -1547,6 +1800,10 @@ function spawnConfetti(){
 }
 
 function revealResults(playerFinal, blocFinal, playerScores, blocScoresAvg, win, playerVar, blocVar){
+  if(gameMode === 'gauntlet'){
+    handleGauntletRoundResult(playerFinal, blocFinal, win, playerVar, blocVar);
+    return;
+  }
   const marginNum = Math.abs(playerFinal - blocFinal);
   const margin = marginNum.toFixed(1);
   const term = document.getElementById('terminal');
