@@ -95,6 +95,26 @@
   }
   .theme-banner .emoji{font-size:22px;}
   .mode-select-grid .diff-opt{padding:16px;}
+  .pvp-banner{
+    display:flex; align-items:center; gap:14px; margin:14px 0 18px;
+    padding:16px 18px; border-radius:var(--r-lg); cursor:pointer;
+    background:linear-gradient(135deg, var(--coral-tint) 0%, var(--card) 100%);
+    border:2px solid var(--coral); box-shadow:0 4px 16px rgba(240,112,75,0.18);
+    transition:transform .15s, box-shadow .15s;
+  }
+  .pvp-banner:hover{ transform:translateY(-2px); box-shadow:0 6px 20px rgba(240,112,75,0.28); }
+  .pvp-banner-icon{ font-size:34px; flex-shrink:0; }
+  .pvp-banner-text{ flex:1; min-width:0; }
+  .pvp-banner-title{ font-family:'Fredoka',sans-serif; font-weight:700; font-size:17px; color:var(--coral-dark); margin-bottom:2px; }
+  .pvp-banner-sub{ font-size:12.5px; color:var(--ink-soft); line-height:1.4; }
+  .pvp-banner-cta{
+    flex-shrink:0; font-family:'Nunito',sans-serif; font-weight:800; font-size:13.5px;
+    color:#fff; background:var(--coral); padding:9px 16px; border-radius:999px; white-space:nowrap;
+  }
+  @media(max-width:520px){
+    .pvp-banner{ flex-wrap:wrap; }
+    .pvp-banner-cta{ margin-left:48px; }
+  }
   .diff-opt{border:2px solid var(--line); background:var(--card-alt); border-radius:var(--r-md); padding:14px 16px; cursor:pointer; transition:border-color .15s, transform .1s;}
   .diff-opt:hover{transform:translateY(-2px);}
   .diff-opt.active{border-color:var(--teal); background:var(--teal-tint);}
@@ -373,6 +393,15 @@
       </div>
     </div>
 
+    <div class="pvp-banner" onclick="showOnlyPanel('panel-pvp-lobby')">
+      <div class="pvp-banner-icon">⚔️</div>
+      <div class="pvp-banner-text">
+        <div class="pvp-banner-title">1v1 Duel — Play a Friend</div>
+        <div class="pvp-banner-sub">Skip the solo modes. Create a room, send them the code, both draft independently — whoever built the stronger grid wins.</div>
+      </div>
+      <div class="pvp-banner-cta">Duel a Friend →</div>
+    </div>
+
     <hr class="section-divider">
 
     <div id="buildModeOptions">
@@ -402,10 +431,6 @@
     </div>
 
     <button class="btn primary begin-btn" id="beginBtn" onclick="beginGame()">🚀 Start Game</button>
-
-    <div style="text-align:center; margin-top:16px;">
-      <button class="btn ghost" onclick="showOnlyPanel('panel-pvp-lobby')" style="border-color:var(--coral); color:var(--coral-dark);">⚔️ Play a Friend (1v1 Duel)</button>
-    </div>
   </div>
 
   <!-- PHASE 1: DRAFT -->
@@ -474,9 +499,10 @@
   <!-- PVP: RESULT -->
   <div class="panel hidden" id="panel-pvp-result">
     <h2>⚔️ Duel Result</h2>
-    <div id="pvpResultArea"></div>
-    <div style="text-align:center; margin-top:18px; display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
-      <button class="btn ghost small" onclick="backToMenu()">📋 Back to Menu</button>
+    <div class="terminal" id="pvpTerminal"></div>
+    <div id="pvpResultArea" style="margin-top:18px;"></div>
+    <div style="text-align:center; margin-top:18px;">
+      <button class="btn ghost small hidden" id="pvpBackToMenuBtn" onclick="backToMenu()">📋 Back to Menu</button>
     </div>
   </div>
 
@@ -520,7 +546,7 @@
   <div class="hidden" id="restartBtnWrap" style="text-align:center; margin-top:20px;">
     <button class="btn btn-danger small" onclick="confirmRestart()">🔄 Restart Run</button>
   </div>
-  <footer>Geo Draft v1.0 · <a onclick="openChangelog()">Changelog</a><br>All figures are rough, rounded, game-balanced approximations — not a geopolitical or military reference.</footer>
+  <footer>Geo Draft v1.1 · <a onclick="openChangelog()">Changelog</a><br>All figures are rough, rounded, game-balanced approximations — not a geopolitical or military reference.</footer>
 </div>
 
 <!-- TUTORIAL MODAL -->
@@ -581,6 +607,16 @@
 <div class="modal-backdrop hidden" id="clBackdrop">
   <div class="modal-card">
     <div class="modal-head"><h3>📜 Changelog</h3><button class="modal-x" onclick="closeModal('clBackdrop')">✕</button></div>
+    <div class="cl-entry">
+      <div class="cl-version">v1.1</div>
+      <ul>
+        <li>🔥 Gauntlet mode — draft once, defend that grid region after region until your first loss; validated and tracked on its own Gauntlet leaderboard</li>
+        <li>🎯 Weekly Theme — a rotating regional theme every week, off by default, with a toggle to opt in if you want to stick to it</li>
+        <li>⚔️ Multiplayer — 1v1 Duel mode: create a room, send the code to a friend, both draft independently, whoever built the stronger grid wins (server-recomputed, not client-trusted)</li>
+        <li>Fixed a bug where the Gauntlet's spin button stayed disabled after the first round, making it impossible to continue a streak</li>
+        <li>Fixed a bug where the previous round's "Deploy" button could stay active between Gauntlet rounds</li>
+      </ul>
+    </div>
     <div class="cl-entry">
       <div class="cl-version">v1.0 — Full Release</div>
       <ul>
@@ -1347,6 +1383,61 @@ async function pvpPollForResult(){
 }
 function pvpShowResult(payload){
   pvpStopPolling();
+  showOnlyPanel('panel-pvp-result');
+  document.getElementById('pvpResultArea').innerHTML = '';
+  document.getElementById('pvpBackToMenuBtn').classList.add('hidden');
+  runPvpBattleLog(payload);
+}
+function runPvpBattleLog(payload){
+  const r = payload.result;
+  const youAreHost = pvpRole === 'host';
+  const yourScores = youAreHost ? r.hostScores : r.guestScores;
+  const oppScores = youAreHost ? r.guestScores : r.hostScores;
+  const yourName = getPlayerUsername() || 'You';
+  const oppName = youAreHost ? (payload.guestName || 'Opponent') : (payload.hostName || 'Opponent');
+
+  const term = document.getElementById('pvpTerminal');
+  term.textContent = '';
+
+  const lines = [
+    {t:`📡 Connecting to ${oppName}'s duel room...`, cls:'line-teal', sfx:sfxTick},
+    {t:`🧮 Normalizing both grids' 8 stat categories on a logarithmic power scale...`, cls:'', sfx:sfxTick},
+    {t:`⚔️ No region, no rivals, no Home Field Advantage — pure grid vs grid...`, cls:'', sfx:sfxTick},
+    {t:`🥊 Running category clashes...`, cls:'', sfx:sfxTick},
+  ];
+  CATEGORIES.forEach((c,idx)=>{
+    const yv = yourScores[idx].toFixed(0), ov = oppScores[idx].toFixed(0);
+    const catWin = yourScores[idx] >= oppScores[idx];
+    lines.push({
+      t:`  ${catWin?'✅':'❌'} ${c.label} (${yv} vs ${ov}) → ${catWin?'You win this round':oppName+' wins this round'}`,
+      cls: catWin ? 'line-teal' : 'line-coral',
+      sfx: catWin ? sfxRoundWin : sfxRoundLose
+    });
+  });
+  lines.push({t:`📊 Tallying composite totals...`, cls:'line-gold', sfx:sfxTick});
+
+  let i=0;
+  function step(){
+    if(i<lines.length){
+      const l = lines[i];
+      const span = document.createElement('div');
+      span.className = l.cls;
+      span.textContent = l.t;
+      term.appendChild(span);
+      term.scrollTop = term.scrollHeight;
+      if(l.sfx) l.sfx();
+      i++;
+      setTimeout(step, 650);
+    } else {
+      const cur = document.createElement('span');
+      cur.className='cursor';
+      term.appendChild(cur);
+      setTimeout(()=>revealPvpResult(payload), 700);
+    }
+  }
+  step();
+}
+function revealPvpResult(payload){
   const r = payload.result;
   const youAreHost = pvpRole === 'host';
   const yourPower = youAreHost ? r.hostPower : r.guestPower;
@@ -1358,7 +1449,6 @@ function pvpShowResult(payload){
   const youWon = (youAreHost && r.winner === 'host') || (!youAreHost && r.winner === 'guest');
   const isDraw = r.winner === 'draw';
 
-  showOnlyPanel('panel-pvp-result');
   const area = document.getElementById('pvpResultArea');
   area.innerHTML = `
     <div class="result-banner ${isDraw ? '' : (youWon ? 'win' : 'loss')}">
@@ -1376,6 +1466,7 @@ function pvpShowResult(payload){
       ${CATEGORIES.map((c,idx)=>clashRow(c.label, c.color, yourScores[idx], oppScores[idx], false)).join('')}
     </div>
   `;
+  document.getElementById('pvpBackToMenuBtn').classList.remove('hidden');
   requestAnimationFrame(()=>{
     setTimeout(()=>{
       document.querySelectorAll('.clash-fill').forEach((el,idx)=>{
