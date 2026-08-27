@@ -402,6 +402,10 @@
     </div>
 
     <button class="btn primary begin-btn" id="beginBtn" onclick="beginGame()">🚀 Start Game</button>
+
+    <div style="text-align:center; margin-top:16px;">
+      <button class="btn ghost" onclick="showOnlyPanel('panel-pvp-lobby')" style="border-color:var(--coral); color:var(--coral-dark);">⚔️ Play a Friend (1v1 Duel)</button>
+    </div>
   </div>
 
   <!-- PHASE 1: DRAFT -->
@@ -411,7 +415,69 @@
     <div id="incomingSentinel"></div>
     <div class="incoming" id="incomingBox"></div>
     <div class="slots" id="slotsBox"></div>
-    <button class="btn primary hidden" id="toWheelBtn" onclick="startWheel()">Grid Locked — Spin for a Region →</button>
+    <button class="btn primary hidden" id="toWheelBtn" onclick="handleDraftComplete()">Grid Locked — Spin for a Region →</button>
+  </div>
+
+  <!-- PVP: LOBBY -->
+  <div class="panel hidden" id="panel-pvp-lobby">
+    <h2>⚔️ 1v1 Duel</h2>
+    <p class="desc">Same 8-category draft, independent random draws for each of you — whoever builds the stronger grid wins. No region, no rivals, no luck after the draft: just your grid vs theirs.</p>
+    <div class="diff-select" style="margin-bottom:16px;">
+      <div class="diff-opt active" id="pvpTabCreate" onclick="setPvpTab('create')" style="padding:14px;">
+        <div class="diff-name">🆕 Create Room</div>
+        <div class="diff-desc">Get a code to send your friend</div>
+      </div>
+      <div class="diff-opt" id="pvpTabJoin" onclick="setPvpTab('join')" style="padding:14px;">
+        <div class="diff-name">🔑 Join Room</div>
+        <div class="diff-desc">Enter a code someone sent you</div>
+      </div>
+    </div>
+    <div id="pvpCreateBox">
+      <button class="btn primary begin-btn" onclick="pvpCreateRoom()">Create Room</button>
+    </div>
+    <div id="pvpJoinBox" class="hidden">
+      <div class="coalition-name-box" style="margin-bottom:14px;">
+        <label for="pvpJoinCodeInput">Room Code</label>
+        <input type="text" id="pvpJoinCodeInput" placeholder="e.g. AB3XQ" maxlength="6" style="text-transform:uppercase;">
+      </div>
+      <button class="btn primary begin-btn" onclick="pvpJoinRoom()">Join Room</button>
+    </div>
+    <div id="pvpLobbyError" class="name-error hidden" style="margin-top:12px; text-align:center;"></div>
+    <div style="text-align:center; margin-top:16px;">
+      <button class="btn ghost small" onclick="backToMenu()">← Back to Menu</button>
+    </div>
+  </div>
+
+  <!-- PVP: WAITING FOR OPPONENT -->
+  <div class="panel hidden" id="panel-pvp-waiting">
+    <h2>⚔️ Room Created</h2>
+    <div style="text-align:center; padding:20px 0;">
+      <div class="stats-pref-sub" style="margin-bottom:8px;">Send this code to your friend:</div>
+      <div id="pvpRoomCodeDisplay" style="font-family:'Space Mono',monospace; font-size:38px; font-weight:700; letter-spacing:.15em; color:var(--teal-dark); margin-bottom:18px;"></div>
+      <div class="spinner" style="margin:0 auto;"></div>
+      <div class="loading-text" id="pvpWaitingText" style="margin-top:14px;">Waiting for your opponent to join...</div>
+    </div>
+    <div style="text-align:center;">
+      <button class="btn ghost small" onclick="pvpCancelRoom()">Cancel</button>
+    </div>
+  </div>
+
+  <!-- PVP: WAITING FOR OPPONENT'S DRAFT -->
+  <div class="panel hidden" id="panel-pvp-draft-wait">
+    <h2>⚔️ Draft Locked In</h2>
+    <div style="text-align:center; padding:20px 0;">
+      <div class="spinner" style="margin:0 auto;"></div>
+      <div class="loading-text" id="pvpDraftWaitText" style="margin-top:14px;">Waiting for your opponent to finish drafting...</div>
+    </div>
+  </div>
+
+  <!-- PVP: RESULT -->
+  <div class="panel hidden" id="panel-pvp-result">
+    <h2>⚔️ Duel Result</h2>
+    <div id="pvpResultArea"></div>
+    <div style="text-align:center; margin-top:18px; display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+      <button class="btn ghost small" onclick="backToMenu()">📋 Back to Menu</button>
+    </div>
   </div>
 
   <!-- PHASE 2: REGION REEL -->
@@ -1139,10 +1205,188 @@ function buildReelList(){
   list.style.transform = 'translateY(0px)';
 }
 function showOnlyPanel(id){
-  ['panel-brief','panel-draft','panel-wheel','panel-campaign'].forEach(p=>{
+  ['panel-brief','panel-draft','panel-wheel','panel-campaign',
+   'panel-pvp-lobby','panel-pvp-waiting','panel-pvp-draft-wait','panel-pvp-result'].forEach(p=>{
     document.getElementById(p).classList.toggle('hidden', p !== id);
   });
 }
+
+/* ============ PVP DUEL ============ */
+let pvpMode = false;
+let pvpRoomCode = null;
+let pvpRole = null; // 'host' | 'guest'
+let pvpPollTimer = null;
+let pvpOpponentName = '';
+
+function setPvpTab(tab){
+  document.getElementById('pvpTabCreate').classList.toggle('active', tab==='create');
+  document.getElementById('pvpTabJoin').classList.toggle('active', tab==='join');
+  document.getElementById('pvpCreateBox').classList.toggle('hidden', tab!=='create');
+  document.getElementById('pvpJoinBox').classList.toggle('hidden', tab!=='join');
+  document.getElementById('pvpLobbyError').classList.add('hidden');
+}
+function pvpStopPolling(){
+  if(pvpPollTimer){ clearInterval(pvpPollTimer); pvpPollTimer = null; }
+}
+function pvpShowError(msg){
+  const el = document.getElementById('pvpLobbyError');
+  el.textContent = msg;
+  el.classList.remove('hidden');
+}
+async function pvpCall(action, extra){
+  const res = await fetch(`${SUPABASE_URL}/functions/v1/pvp-room`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+      'apikey': SUPABASE_ANON_KEY
+    },
+    body: JSON.stringify({ action, playerId: getPlayerId(), ...extra })
+  });
+  const body = await res.json().catch(()=>({}));
+  if(!res.ok) throw new Error(body.error || `Request failed (${res.status})`);
+  return body;
+}
+
+async function pvpCreateRoom(){
+  if(SUPABASE_URL === 'YOUR_SUPABASE_URL'){ pvpShowError('Multiplayer isn\'t connected yet.'); return; }
+  try{
+    const name = getPlayerUsername() || 'Anonymous Commander';
+    const result = await pvpCall('create', { name });
+    pvpRoomCode = result.code;
+    pvpRole = 'host';
+    pvpMode = true;
+    document.getElementById('pvpRoomCodeDisplay').textContent = pvpRoomCode;
+    document.getElementById('pvpWaitingText').textContent = 'Waiting for your opponent to join...';
+    showOnlyPanel('panel-pvp-waiting');
+    pvpStopPolling();
+    pvpPollTimer = setInterval(pvpPollForOpponentJoin, 2000);
+  }catch(e){ pvpShowError(e.message || 'Could not create room.'); }
+}
+async function pvpJoinRoom(){
+  if(SUPABASE_URL === 'YOUR_SUPABASE_URL'){ pvpShowError('Multiplayer isn\'t connected yet.'); return; }
+  const codeInput = document.getElementById('pvpJoinCodeInput');
+  const code = codeInput.value.trim().toUpperCase();
+  if(!code){ pvpShowError('Enter a room code.'); return; }
+  try{
+    const name = getPlayerUsername() || 'Anonymous Commander';
+    const result = await pvpCall('join', { code, name });
+    pvpRoomCode = code;
+    pvpRole = 'guest';
+    pvpMode = true;
+    pvpOpponentName = result.hostName || 'Your opponent';
+    pvpStartOwnDraft();
+  }catch(e){ pvpShowError(e.message || 'Could not join that room.'); }
+}
+function pvpCancelRoom(){
+  pvpStopPolling();
+  pvpMode = false;
+  pvpRoomCode = null;
+  pvpRole = null;
+  showOnlyPanel('panel-brief');
+}
+async function pvpPollForOpponentJoin(){
+  try{
+    const {data, error} = await sb.from('pvp_rooms').select('*').eq('code', pvpRoomCode).single();
+    if(error) throw error;
+    if(data && data.status === 'drafting' && data.guest_player_id){
+      pvpStopPolling();
+      pvpOpponentName = data.guest_name || 'Your opponent';
+      pvpStartOwnDraft();
+    }
+  }catch(e){ /* keep polling silently — a single missed check isn't fatal */ }
+}
+function pvpStartOwnDraft(){
+  // Reuses the entire existing draft phase untouched — pvpMode just changes
+  // what happens when the grid is full (see handleDraftComplete).
+  difficulty = 'normal';
+  statsVisible = true;
+  rerollsMax = 1;
+  rerollsRemaining = rerollsMax;
+  useWeeklyTheme = false;
+  deck = shuffle(COUNTRIES);
+  deckPtr = 0;
+  grid = {};
+  showOnlyPanel('panel-draft');
+  renderSlots();
+  renderIncoming();
+  renderRecapBar();
+  document.getElementById('sessionBar').classList.add('hidden');
+  showRestartButton();
+}
+function handleDraftComplete(){
+  if(pvpMode){ pvpSubmitDraft(); return; }
+  startWheel();
+}
+async function pvpSubmitDraft(){
+  showOnlyPanel('panel-pvp-draft-wait');
+  const gridSelections = {};
+  CATEGORIES.forEach(c=>{ gridSelections[c.key] = grid[c.key].country; });
+  try{
+    const result = await pvpCall('submit', { code: pvpRoomCode, gridSelections });
+    if(result.status === 'complete'){
+      pvpShowResult(result);
+    } else {
+      document.getElementById('pvpDraftWaitText').textContent = `Waiting for ${pvpOpponentName} to finish drafting...`;
+      pvpStopPolling();
+      pvpPollTimer = setInterval(pvpPollForResult, 2000);
+    }
+  }catch(e){
+    document.getElementById('pvpDraftWaitText').textContent = '⚠️ ' + (e.message || 'Something went wrong submitting your draft.');
+  }
+}
+async function pvpPollForResult(){
+  try{
+    const {data, error} = await sb.from('pvp_rooms').select('*').eq('code', pvpRoomCode).single();
+    if(error) throw error;
+    if(data && data.status === 'complete' && data.result){
+      pvpStopPolling();
+      pvpShowResult({ result: data.result, hostName: data.host_name, guestName: data.guest_name });
+    }
+  }catch(e){ /* keep polling silently */ }
+}
+function pvpShowResult(payload){
+  pvpStopPolling();
+  const r = payload.result;
+  const youAreHost = pvpRole === 'host';
+  const yourPower = youAreHost ? r.hostPower : r.guestPower;
+  const oppPower = youAreHost ? r.guestPower : r.hostPower;
+  const yourScores = youAreHost ? r.hostScores : r.guestScores;
+  const oppScores = youAreHost ? r.guestScores : r.hostScores;
+  const yourName = getPlayerUsername() || 'You';
+  const oppName = youAreHost ? (payload.guestName || 'Opponent') : (payload.hostName || 'Opponent');
+  const youWon = (youAreHost && r.winner === 'host') || (!youAreHost && r.winner === 'guest');
+  const isDraw = r.winner === 'draw';
+
+  showOnlyPanel('panel-pvp-result');
+  const area = document.getElementById('pvpResultArea');
+  area.innerHTML = `
+    <div class="result-banner ${isDraw ? '' : (youWon ? 'win' : 'loss')}">
+      <div class="result-title ${isDraw ? '' : (youWon ? 'win' : 'loss')}">${isDraw ? "It's a Draw!" : (youWon ? 'Victory!' : 'Defeat')}</div>
+      <div class="result-margin">${escapeHtml(yourName)} vs ${escapeHtml(oppName)}</div>
+    </div>
+    <div class="clash-block">
+      <div class="clash-legend">
+        <span><span class="legend-dot" style="background:var(--teal)"></span>${escapeHtml(yourName)}</span>
+        <span><span class="legend-dot" style="background:var(--coral)"></span>${escapeHtml(oppName)}</span>
+      </div>
+      ${clashRow('Overall Power', null, yourPower, oppPower, true)}
+    </div>
+    <div class="clash-block">
+      ${CATEGORIES.map((c,idx)=>clashRow(c.label, c.color, yourScores[idx], oppScores[idx], false)).join('')}
+    </div>
+  `;
+  requestAnimationFrame(()=>{
+    setTimeout(()=>{
+      document.querySelectorAll('.clash-fill').forEach((el,idx)=>{
+        const w = el.getAttribute('data-w');
+        setTimeout(()=>{ el.style.width = w+'%'; }, idx*35);
+      });
+    }, 30);
+  });
+  youWon && !isDraw ? sfxWin() : (isDraw ? null : sfxLose());
+}
+
 function startWheel(){
   showOnlyPanel('panel-wheel');
   if(gameMode === 'daily'){
