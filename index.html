@@ -458,6 +458,24 @@
       </div>
     </div>
     <div id="pvpCreateBox">
+      <div class="section-label">Room Settings</div>
+      <div class="diff-select" id="pvpDiffSelect" style="margin-bottom:14px;">
+        <div class="diff-opt active" data-pd="normal">
+          <div class="diff-name">Normal</div>
+          <div class="diff-desc">1 reroll · stats visible</div>
+        </div>
+        <div class="diff-opt" data-pd="hard">
+          <div class="diff-name">Hard</div>
+          <div class="diff-desc">No rerolls · stats hidden</div>
+        </div>
+      </div>
+      <div class="stats-pref" id="pvpStatsPrefBox" style="margin-bottom:16px;">
+        <label class="switch"><input type="checkbox" id="pvpStatsPrefToggle" checked><span class="switch-slider"></span></label>
+        <div>
+          <div class="stats-pref-label">Show country stats while drafting</div>
+          <div class="stats-pref-sub">Applies to both of you — whatever you set here is what your opponent gets too.</div>
+        </div>
+      </div>
       <button class="btn primary begin-btn" onclick="pvpCreateRoom()">Create Room</button>
     </div>
     <div id="pvpJoinBox" class="hidden">
@@ -1004,6 +1022,27 @@ document.querySelectorAll('#diffSelect .diff-opt').forEach(opt=>{
   });
 });
 
+let pvpRoomDifficulty = 'normal';
+document.querySelectorAll('#pvpDiffSelect .diff-opt').forEach(opt=>{
+  opt.addEventListener('click', ()=>{
+    document.querySelectorAll('#pvpDiffSelect .diff-opt').forEach(o=>o.classList.remove('active'));
+    opt.classList.add('active');
+    pvpRoomDifficulty = opt.dataset.pd;
+    const statsToggle = document.getElementById('pvpStatsPrefToggle');
+    const statsBox = document.getElementById('pvpStatsPrefBox');
+    if(pvpRoomDifficulty === 'hard'){
+      statsToggle.checked = false;
+      statsToggle.disabled = true;
+      statsBox.classList.add('disabled');
+    } else {
+      statsToggle.disabled = false;
+      statsToggle.checked = true;
+      statsBox.classList.remove('disabled');
+    }
+    sfxClick();
+  });
+});
+
 /* ============ STATE ============ */
 let deck = [], deckPtr = 0, grid = {};
 let rerollsMax = 3, rerollsRemaining = 3, statsVisible = true;
@@ -1288,7 +1327,9 @@ async function pvpCreateRoom(){
   if(SUPABASE_URL === 'YOUR_SUPABASE_URL'){ pvpShowError('Multiplayer isn\'t connected yet.'); return; }
   try{
     const name = getPlayerUsername() || 'Anonymous Commander';
-    const result = await pvpCall('create', { name });
+    const roomDifficulty = pvpRoomDifficulty;
+    const roomStatsVisible = document.getElementById('pvpStatsPrefToggle').checked;
+    const result = await pvpCall('create', { name, difficulty: roomDifficulty, statsVisible: roomStatsVisible });
     pvpRoomCode = result.code;
     pvpRole = 'host';
     pvpMode = true;
@@ -1311,7 +1352,7 @@ async function pvpJoinRoom(){
     pvpRole = 'guest';
     pvpMode = true;
     pvpOpponentName = result.hostName || 'Your opponent';
-    pvpStartOwnDraft();
+    pvpStartOwnDraft(result.difficulty, result.statsVisible);
   }catch(e){ pvpShowError(e.message || 'Could not join that room.'); }
 }
 function pvpCancelRoom(){
@@ -1328,16 +1369,17 @@ async function pvpPollForOpponentJoin(){
     if(data && data.status === 'drafting' && data.guest_player_id){
       pvpStopPolling();
       pvpOpponentName = data.guest_name || 'Your opponent';
-      pvpStartOwnDraft();
+      pvpStartOwnDraft(data.difficulty, data.stats_visible);
     }
   }catch(e){ /* keep polling silently — a single missed check isn't fatal */ }
 }
-function pvpStartOwnDraft(){
+function pvpStartOwnDraft(roomDifficulty, roomStatsVisible){
   // Reuses the entire existing draft phase untouched — pvpMode just changes
-  // what happens when the grid is full (see handleDraftComplete).
-  difficulty = 'normal';
-  statsVisible = true;
-  rerollsMax = 1;
+  // what happens when the grid is full (see handleDraftComplete). Both
+  // players use whatever the host configured when the room was created.
+  difficulty = roomDifficulty === 'hard' ? 'hard' : 'normal';
+  statsVisible = difficulty === 'hard' ? false : (roomStatsVisible !== false);
+  rerollsMax = difficulty === 'hard' ? 0 : 1;
   rerollsRemaining = rerollsMax;
   useWeeklyTheme = false;
   deck = shuffle(COUNTRIES);
