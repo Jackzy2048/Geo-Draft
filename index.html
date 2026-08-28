@@ -505,8 +505,13 @@
     <h2>⚔️ Duel Result</h2>
     <div class="terminal" id="pvpTerminal"></div>
     <div id="pvpResultArea" style="margin-top:18px;"></div>
-    <div style="text-align:center; margin-top:18px;">
+    <div style="text-align:center; margin-top:18px; display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+      <button class="btn primary small hidden" id="pvpRematchBtn" onclick="pvpRequestRematch()">🔁 Rematch</button>
       <button class="btn ghost small hidden" id="pvpBackToMenuBtn" onclick="backToMenu()">📋 Back to Menu</button>
+    </div>
+    <div id="pvpRematchWaiting" class="hidden" style="text-align:center; margin-top:14px;">
+      <div class="spinner" style="margin:0 auto 8px;"></div>
+      <div class="loading-text">Waiting for your opponent to want a rematch too...</div>
     </div>
   </div>
 
@@ -615,8 +620,8 @@
       <div class="cl-version">v1.1</div>
       <ul>
         <li>🔥 Gauntlet mode — draft once, defend that grid region after region until your first loss; validated and tracked on its own Gauntlet leaderboard</li>
-        <li>🎯 Weekly Theme — a rotating regional theme every week, off by default, with a toggle to opt in if you want to stick to it</li>
         <li>⚔️ Multiplayer — 1v1 Duel mode: create a room, send the code to a friend, both draft independently, whoever built the stronger grid wins (server-recomputed, not client-trusted)</li>
+        <li>Removed Weekly Theme (the regional restriction never earned its keep) — all reels now always draw from the full region/country pool</li>
         <li>Fixed a bug where the Gauntlet's spin button stayed disabled after the first round, making it impossible to continue a streak</li>
         <li>Fixed a bug where the previous round's "Deploy" button could stay active between Gauntlet rounds</li>
       </ul>
@@ -1368,11 +1373,44 @@ async function pvpPollForResult(){
     }
   }catch(e){ /* keep polling silently */ }
 }
+async function pvpRequestRematch(){
+  const btn = document.getElementById('pvpRematchBtn');
+  btn.disabled = true;
+  document.getElementById('pvpRematchWaiting').classList.remove('hidden');
+  try{
+    const result = await pvpCall('rematch', { code: pvpRoomCode });
+    if(result.ready){
+      document.getElementById('pvpRematchWaiting').classList.add('hidden');
+      pvpStartOwnDraft(result.difficulty, result.statsVisible);
+    } else {
+      pvpStopPolling();
+      pvpPollTimer = setInterval(pvpPollForRematchReady, 2000);
+    }
+  }catch(e){
+    document.getElementById('pvpRematchWaiting').classList.add('hidden');
+    btn.disabled = false;
+    showToast('⚠️ ' + (e.message || 'Could not request a rematch.'));
+  }
+}
+async function pvpPollForRematchReady(){
+  try{
+    const {data, error} = await sb.from('pvp_rooms').select('*').eq('code', pvpRoomCode).single();
+    if(error) throw error;
+    if(data && data.status === 'drafting' && !data.host_grid && !data.guest_grid){
+      pvpStopPolling();
+      document.getElementById('pvpRematchWaiting').classList.add('hidden');
+      pvpStartOwnDraft(data.difficulty, data.stats_visible);
+    }
+  }catch(e){ /* keep polling silently */ }
+}
 function pvpShowResult(payload){
   pvpStopPolling();
   showOnlyPanel('panel-pvp-result');
   document.getElementById('pvpResultArea').innerHTML = '';
   document.getElementById('pvpBackToMenuBtn').classList.add('hidden');
+  document.getElementById('pvpRematchBtn').classList.add('hidden');
+  document.getElementById('pvpRematchBtn').disabled = false;
+  document.getElementById('pvpRematchWaiting').classList.add('hidden');
   runPvpBattleLog(payload);
 }
 function runPvpBattleLog(payload){
@@ -1454,6 +1492,7 @@ function revealPvpResult(payload){
     </div>
   `;
   document.getElementById('pvpBackToMenuBtn').classList.remove('hidden');
+  document.getElementById('pvpRematchBtn').classList.remove('hidden');
   requestAnimationFrame(()=>{
     setTimeout(()=>{
       document.querySelectorAll('.clash-fill').forEach((el,idx)=>{
