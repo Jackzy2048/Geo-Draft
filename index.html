@@ -88,32 +88,26 @@
   .diff-select{display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; margin-bottom:14px;}
   .section-label{font-family:'Fredoka',sans-serif; font-weight:600; font-size:12px; letter-spacing:.05em; text-transform:uppercase; color:var(--ink-soft); margin-bottom:8px;}
   .section-divider{border:none; border-top:1px solid var(--line); margin:20px 0;}
-  .theme-banner{
-    display:flex; align-items:center; gap:10px; background:var(--teal-tint); border:1.5px solid var(--teal);
-    border-radius:var(--r-md); padding:10px 14px; margin-bottom:16px; font-family:'Fredoka',sans-serif;
-    font-weight:600; font-size:14px; color:var(--teal-dark);
-  }
-  .theme-banner .emoji{font-size:22px;}
   .mode-select-grid .diff-opt{padding:16px;}
   .pvp-banner{
     display:flex; align-items:center; gap:14px; margin:14px 0 18px;
-    padding:16px 18px; border-radius:var(--r-lg); cursor:pointer;
-    background:linear-gradient(135deg, var(--coral-tint) 0%, var(--card) 100%);
-    border:2px solid var(--coral); box-shadow:0 4px 16px rgba(240,112,75,0.18);
+    padding:14px 16px; border-radius:var(--r-lg); cursor:pointer;
+    background:var(--coral-tint);
+    border:1.5px solid var(--coral); box-shadow:var(--shadow-sm);
     transition:transform .15s, box-shadow .15s;
   }
-  .pvp-banner:hover{ transform:translateY(-2px); box-shadow:0 6px 20px rgba(240,112,75,0.28); }
-  .pvp-banner-icon{ font-size:34px; flex-shrink:0; }
+  .pvp-banner:hover{ transform:translateY(-2px); box-shadow:var(--shadow); }
+  .pvp-banner-icon{ font-size:28px; flex-shrink:0; }
   .pvp-banner-text{ flex:1; min-width:0; }
-  .pvp-banner-title{ font-family:'Fredoka',sans-serif; font-weight:700; font-size:17px; color:var(--coral-dark); margin-bottom:2px; }
-  .pvp-banner-sub{ font-size:12.5px; color:var(--ink-soft); line-height:1.4; }
+  .pvp-banner-title{ font-family:'Fredoka',sans-serif; font-weight:700; font-size:15.5px; color:var(--coral-dark); margin-bottom:2px; }
+  .pvp-banner-sub{ font-size:11.5px; color:var(--ink-soft); line-height:1.4; }
   .pvp-banner-cta{
-    flex-shrink:0; font-family:'Nunito',sans-serif; font-weight:800; font-size:13.5px;
-    color:#fff; background:var(--coral); padding:9px 16px; border-radius:999px; white-space:nowrap;
+    flex-shrink:0; font-family:'Nunito',sans-serif; font-weight:800; font-size:12.5px;
+    color:#fff; background:var(--coral); padding:8px 14px; border-radius:999px; white-space:nowrap;
   }
-  @media(max-width:520px){
-    .pvp-banner{ flex-wrap:wrap; }
-    .pvp-banner-cta{ margin-left:48px; }
+  @media(max-width:560px){
+    .pvp-banner{ flex-direction:column; align-items:flex-start; text-align:left; }
+    .pvp-banner-cta{ align-self:stretch; text-align:center; margin-top:2px; }
   }
   .diff-opt{border:2px solid var(--line); background:var(--card-alt); border-radius:var(--r-md); padding:14px 16px; cursor:pointer; transition:border-color .15s, transform .1s;}
   .diff-opt:hover{transform:translateY(-2px);}
@@ -336,14 +330,6 @@
   <!-- PHASE 0: BRIEFING -->
   <div class="panel" id="panel-brief">
     <h2>Mission Briefing</h2>
-    <div class="theme-banner" id="themeBanner"></div>
-    <div class="stats-pref" id="themeToggleBox" style="margin-bottom:18px;">
-      <label class="switch"><input type="checkbox" id="themeToggleInput"><span class="switch-slider"></span></label>
-      <div>
-        <div class="stats-pref-label">Stick to this week's theme</div>
-        <div class="stats-pref-sub">Turn off to draw from every region in the world, ignoring this week's restriction.</div>
-      </div>
-    </div>
     <p class="desc" id="briefDescBuild">
       Eight category slots sit open on your grid: Population, Land Mass, Military Budget, Coastline, GDP, Airports,
       Internet Speed, and Renewable Energy. Nations get pulled from the global pool one at a time — you decide which
@@ -397,7 +383,7 @@
       <div class="pvp-banner-icon">⚔️</div>
       <div class="pvp-banner-text">
         <div class="pvp-banner-title">1v1 Duel — Play a Friend</div>
-        <div class="pvp-banner-sub">Skip the solo modes. Create a room, send them the code, both draft independently — whoever built the stronger grid wins.</div>
+        <div class="pvp-banner-sub">Draft against a friend — create a room and send them the code.</div>
       </div>
       <div class="pvp-banner-cta">Duel a Friend →</div>
     </div>
@@ -822,44 +808,8 @@ function computeRegionHFA(members){
 let currentHFA = BASE_HFA_MULT;
 const REGIONS = [...new Set(COUNTRIES.map(c=>c.r))];
 
-/* ============ WEEKLY THEME ============
-   A rotating themed subset of regions, the same for every player during a
-   given NZ week, tied to the same Monday-NZST boundary the weekly leaderboard
-   already resets on — so "this week" actually plays differently, not just a
-   time-filtered slice of the same game. */
-const WEEKLY_THEMES = [
-  { name:"Anything Goes",        emoji:"🌐", regions: null },
-  { name:"The Americas",          emoji:"🌎", regions: ["North America","Central America","Caribbean","South America"] },
-  { name:"Europe",                emoji:"🏰", regions: ["Western Europe","Northern Europe","Southern Europe","Eastern Europe"] },
-  { name:"Sub-Saharan Africa",    emoji:"🌍", regions: ["West Africa","Central Africa","East Africa","Southern Africa"] },
-  { name:"Asia",                  emoji:"🏯", regions: ["South Asia","East Asia","Southeast Asia","Central Asia"] },
-  { name:"Middle East & North Africa", emoji:"🕌", regions: ["Middle East","North Africa"] },
-  { name:"Pacific & Oceania",     emoji:"🏝️", regions: ["Oceania","Southeast Asia"] },
-];
-function weekIndexSinceEpoch(){
-  // Number of NZ-local Monday-to-Monday weeks since a fixed reference Monday —
-  // deterministic and identical for every player, used purely to rotate themes.
-  const startISO = startOfThisWeekISO();
-  const startMs = new Date(startISO).getTime();
-  const refMs = Date.UTC(2024, 0, 1); // arbitrary fixed reference point, never changes
-  return Math.floor((startMs - refMs) / (7*24*60*60*1000));
-}
-function getWeeklyTheme(){
-  const idx = ((weekIndexSinceEpoch() % WEEKLY_THEMES.length) + WEEKLY_THEMES.length) % WEEKLY_THEMES.length;
-  return WEEKLY_THEMES[idx];
-}
-let useWeeklyTheme = false;
-function themeRegions(){
-  if(!useWeeklyTheme) return REGIONS;
-  const theme = getWeeklyTheme();
-  return theme.regions ? REGIONS.filter(r => theme.regions.includes(r)) : REGIONS;
-}
-function themeCountryNames(){
-  if(!useWeeklyTheme) return COUNTRIES.map(c=>c.n);
-  const theme = getWeeklyTheme();
-  const pool = theme.regions ? COUNTRIES.filter(c => theme.regions.includes(c.r)) : COUNTRIES;
-  return pool.map(c => c.n);
-}
+function themeRegions(){ return REGIONS; }
+function themeCountryNames(){ return COUNTRIES.map(c=>c.n); }
 
 /* ============ THEME ============ */
 function updateThemeButton(){
@@ -971,15 +921,12 @@ document.querySelectorAll('#modeSelect .diff-opt').forEach(opt=>{
 
     const buildOpts = document.getElementById('buildModeOptions');
     const dailyNotice = document.getElementById('dailyLockedNotice');
-    const themeToggleBox = document.getElementById('themeToggleBox');
     if(gameMode === 'daily'){
       buildOpts.classList.add('hidden');
       dailyNotice.classList.remove('hidden');
-      themeToggleBox.classList.add('hidden');
     } else {
       buildOpts.classList.remove('hidden');
       dailyNotice.classList.add('hidden');
-      themeToggleBox.classList.remove('hidden');
     }
     sfxClick();
   });
@@ -1144,7 +1091,6 @@ function startDraft(){
   rerollsMax = (dailyMode || difficulty==='hard') ? 0 : 1;
   rerollsRemaining = rerollsMax;
   statsVisible = dailyMode ? false : document.getElementById('statsPrefToggle').checked;
-  useWeeklyTheme = (gameMode === 'daily') ? true : document.getElementById('themeToggleInput').checked;
 
   if(gameMode === 'gauntlet') resetGauntletState();
 
@@ -1381,7 +1327,6 @@ function pvpStartOwnDraft(roomDifficulty, roomStatsVisible){
   statsVisible = difficulty === 'hard' ? false : (roomStatsVisible !== false);
   rerollsMax = difficulty === 'hard' ? 0 : 1;
   rerollsRemaining = rerollsMax;
-  useWeeklyTheme = false;
   deck = shuffle(COUNTRIES);
   deckPtr = 0;
   grid = {};
@@ -2178,13 +2123,6 @@ function hideSplash(){
   if(savedName){
     const input = document.getElementById('playerUsernameInput');
     if(input) input.value = savedName;
-  }
-  const theme = getWeeklyTheme();
-  const banner = document.getElementById('themeBanner');
-  if(banner){
-    banner.innerHTML = theme.regions
-      ? `<span class="emoji">${theme.emoji}</span> This week's theme: <b>${theme.name}</b> — region &amp; country reels are drawn only from these areas until next Monday`
-      : `<span class="emoji">${theme.emoji}</span> This week: <b>${theme.name}</b> — full region pool, no restrictions`;
   }
   refreshDailyCardState();
   consumeResumeState();
